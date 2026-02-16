@@ -15,6 +15,7 @@ const state = {
 };
 
 const elements = {
+  openSourceViewerBtn: document.querySelector("#open-source-viewer-btn"),
   fileInput: document.querySelector("#file-input"),
   pages: document.querySelector("#pages"),
   status: document.querySelector("#status"),
@@ -22,19 +23,25 @@ const elements = {
   clearSelectionBtn: document.querySelector("#clear-selection-btn"),
   deleteSelectedBtn: document.querySelector("#delete-selected-btn"),
   exportCurrentBtn: document.querySelector("#export-current-btn"),
-  openCurrentViewerBtn: document.querySelector("#open-current-viewer-btn"),
   exportSelectedBtn: document.querySelector("#export-selected-btn"),
   splitEachBtn: document.querySelector("#split-each-btn"),
   splitRangesInput: document.querySelector("#split-ranges-input"),
   splitRangesBtn: document.querySelector("#split-ranges-btn"),
   spreadBtn: document.querySelector("#spread-btn"),
-  openSpreadViewerBtn: document.querySelector("#open-spread-viewer-btn"),
   spreadSelectedBtn: document.querySelector("#spread-selected-btn"),
-  openSpreadSelectedViewerBtn: document.querySelector("#open-spread-selected-viewer-btn"),
   bindingSelect: document.querySelector("#binding-select")
 };
 
 elements.fileInput.addEventListener("change", onFileSelected);
+elements.openSourceViewerBtn.disabled = true;
+elements.openSourceViewerBtn.addEventListener("click", () => {
+  if (!state.fileBytes) {
+    setStatus("先にPDFを読み込んでください。");
+    return;
+  }
+  openInBrowserViewer(new Blob([state.fileBytes], { type: "application/pdf" }));
+  setStatus("読み込みPDFをブラウザのViewerで開きました。");
+});
 elements.selectAllBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
   state.pages.forEach((p) => (p.selected = true));
@@ -66,15 +73,6 @@ elements.exportCurrentBtn.addEventListener("click", () =>
     if (!requireLoaded()) return;
     const indices = state.pages.map((p) => p.srcIndex);
     await exportPdf(indices, `${baseName(state.fileName)}_ordered.pdf`);
-  })
-);
-elements.openCurrentViewerBtn.addEventListener("click", () =>
-  runBusyTask("Viewerで開くPDFを作成しています...", async () => {
-    if (!requireLoaded()) return;
-    const indices = state.pages.map((p) => p.srcIndex);
-    const bytes = await createPdfFromIndices(indices);
-    openInBrowserViewer(new Blob([bytes], { type: "application/pdf" }));
-    setStatus("ブラウザのPDF Viewerで開きました。");
   })
 );
 elements.exportSelectedBtn.addEventListener("click", () =>
@@ -127,14 +125,6 @@ elements.spreadBtn.addEventListener("click", () =>
     setStatus("見開きPDFを書き出しました。");
   })
 );
-elements.openSpreadViewerBtn.addEventListener("click", () =>
-  runBusyTask("見開きPDFを生成しています...", async () => {
-    if (!requireLoaded()) return;
-    const bytes = await createSpreadPdf(state.pages.map((p) => p.srcIndex), currentBinding());
-    openInBrowserViewer(new Blob([bytes], { type: "application/pdf" }));
-    setStatus("見開きPDFをブラウザのViewerで開きました。");
-  })
-);
 elements.spreadSelectedBtn.addEventListener("click", () =>
   runBusyTask("選択ページの見開きPDFを書き出しています...", async () => {
     if (!requireLoaded()) return;
@@ -146,19 +136,6 @@ elements.spreadSelectedBtn.addEventListener("click", () =>
     const bytes = await createSpreadPdf(indices, currentBinding());
     downloadBlob(new Blob([bytes], { type: "application/pdf" }), `${baseName(state.fileName)}_spread_selected.pdf`);
     setStatus("選択ページの見開きPDFを書き出しました。");
-  })
-);
-elements.openSpreadSelectedViewerBtn.addEventListener("click", () =>
-  runBusyTask("選択ページの見開きPDFを生成しています...", async () => {
-    if (!requireLoaded()) return;
-    const indices = selectedIndices();
-    if (!indices.length) {
-      setStatus("見開き変換するページを選択してください。");
-      return;
-    }
-    const bytes = await createSpreadPdf(indices, currentBinding());
-    openInBrowserViewer(new Blob([bytes], { type: "application/pdf" }));
-    setStatus("選択ページの見開きPDFをブラウザのViewerで開きました。");
   })
 );
 
@@ -180,6 +157,7 @@ async function onFileSelected(event) {
     state.fileName = file.name;
     state.fileBytes = appBytes;
     state.pdfjsDoc = pdfjsDoc;
+    elements.openSourceViewerBtn.disabled = false;
     state.pages = Array.from({ length: pdfjsDoc.numPages }, (_, i) => ({
       srcIndex: i,
       selected: false
@@ -450,14 +428,11 @@ function toggleButtons(disabled) {
     elements.clearSelectionBtn,
     elements.deleteSelectedBtn,
     elements.exportCurrentBtn,
-    elements.openCurrentViewerBtn,
     elements.exportSelectedBtn,
     elements.splitEachBtn,
     elements.splitRangesBtn,
     elements.spreadBtn,
-    elements.openSpreadViewerBtn,
-    elements.spreadSelectedBtn,
-    elements.openSpreadSelectedViewerBtn
+    elements.spreadSelectedBtn
   ]) {
     el.disabled = disabled;
   }

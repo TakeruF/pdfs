@@ -55,6 +55,10 @@ body {
   color: var(--muted);
 }
 
+.top-open-btn {
+  margin-bottom: 8px;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
