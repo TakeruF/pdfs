@@ -29,6 +29,8 @@ const elements = {
   splitRangesBtn: document.querySelector("#split-ranges-btn"),
   spreadBtn: document.querySelector("#spread-btn"),
   openSpreadViewerBtn: document.querySelector("#open-spread-viewer-btn"),
+  spreadSelectedBtn: document.querySelector("#spread-selected-btn"),
+  openSpreadSelectedViewerBtn: document.querySelector("#open-spread-selected-viewer-btn"),
   bindingSelect: document.querySelector("#binding-select")
 };
 
@@ -131,6 +133,32 @@ elements.openSpreadViewerBtn.addEventListener("click", () =>
     const bytes = await createSpreadPdf(state.pages.map((p) => p.srcIndex), currentBinding());
     openInBrowserViewer(new Blob([bytes], { type: "application/pdf" }));
     setStatus("見開きPDFをブラウザのViewerで開きました。");
+  })
+);
+elements.spreadSelectedBtn.addEventListener("click", () =>
+  runBusyTask("選択ページの見開きPDFを書き出しています...", async () => {
+    if (!requireLoaded()) return;
+    const indices = selectedIndices();
+    if (!indices.length) {
+      setStatus("見開き変換するページを選択してください。");
+      return;
+    }
+    const bytes = await createSpreadPdf(indices, currentBinding());
+    downloadBlob(new Blob([bytes], { type: "application/pdf" }), `${baseName(state.fileName)}_spread_selected.pdf`);
+    setStatus("選択ページの見開きPDFを書き出しました。");
+  })
+);
+elements.openSpreadSelectedViewerBtn.addEventListener("click", () =>
+  runBusyTask("選択ページの見開きPDFを生成しています...", async () => {
+    if (!requireLoaded()) return;
+    const indices = selectedIndices();
+    if (!indices.length) {
+      setStatus("見開き変換するページを選択してください。");
+      return;
+    }
+    const bytes = await createSpreadPdf(indices, currentBinding());
+    openInBrowserViewer(new Blob([bytes], { type: "application/pdf" }));
+    setStatus("選択ページの見開きPDFをブラウザのViewerで開きました。");
   })
 );
 
@@ -391,6 +419,10 @@ function currentBinding() {
   return elements.bindingSelect.value === "right" ? "right" : "left";
 }
 
+function selectedIndices() {
+  return state.pages.filter((p) => p.selected).map((p) => p.srcIndex);
+}
+
 function requireLoaded() {
   if (state.pages.length) return true;
   setStatus("先にPDFを読み込んでください。");
@@ -423,7 +455,9 @@ function toggleButtons(disabled) {
     elements.splitEachBtn,
     elements.splitRangesBtn,
     elements.spreadBtn,
-    elements.openSpreadViewerBtn
+    elements.openSpreadViewerBtn,
+    elements.spreadSelectedBtn,
+    elements.openSpreadSelectedViewerBtn
   ]) {
     el.disabled = disabled;
   }

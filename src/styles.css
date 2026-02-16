@@ -10,6 +10,14 @@
   --danger: #b3261e;
   --danger-soft: #fde8e7;
   --selected: #eaf4ff;
+  --select: #2b5e34;
+  --select-soft: #e9f7eb;
+  --export: #0f4c81;
+  --export-soft: #e7f1fb;
+  --viewer: #5a3e8a;
+  --viewer-soft: #efe8fb;
+  --spread: #8a5b11;
+  --spread-soft: #faefde;
 }
 
 * {
@@ -100,7 +108,38 @@ body {
   border-color: #98a8bf;
 }
 
-#delete-selected-btn {
+.actions button:disabled,
+.split button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-select {
+  border-color: #b9dfbf;
+  background: var(--select-soft);
+  color: var(--select);
+}
+
+.btn-export {
+  border-color: #bfd4ec;
+  background: var(--export-soft);
+  color: var(--export);
+}
+
+.btn-viewer {
+  border-color: #d1c2ef;
+  background: var(--viewer-soft);
+  color: var(--viewer);
+}
+
+.btn-spread {
+  border-color: #e8d2ad;
+  background: var(--spread-soft);
+  color: var(--spread);
+}
+
+.btn-danger {
   border-color: #efb3b0;
   background: var(--danger-soft);
   color: var(--danger);

@@ -22,15 +22,17 @@
       </section>
 
       <section class="panel actions">
-        <button id="select-all-btn" type="button">全選択</button>
-        <button id="clear-selection-btn" type="button">選択解除</button>
-        <button id="delete-selected-btn" type="button">選択ページを削除</button>
-        <button id="export-current-btn" type="button">現在の並びで書き出し</button>
-        <button id="open-current-viewer-btn" type="button">現在の並びをViewerで開く</button>
-        <button id="export-selected-btn" type="button">選択ページのみ書き出し</button>
-        <button id="split-each-btn" type="button">1ページずつ分割ZIP</button>
-        <button id="spread-btn" type="button">見開き（2in1）で書き出し</button>
-        <button id="open-spread-viewer-btn" type="button">見開きをViewerで開く</button>
+        <button id="select-all-btn" class="btn-select" type="button">全選択</button>
+        <button id="clear-selection-btn" class="btn-select" type="button">選択解除</button>
+        <button id="delete-selected-btn" class="btn-danger" type="button">選択ページを削除</button>
+        <button id="export-current-btn" class="btn-export" type="button">現在の並びで書き出し</button>
+        <button id="open-current-viewer-btn" class="btn-viewer" type="button">現在の並びをViewerで開く</button>
+        <button id="export-selected-btn" class="btn-export" type="button">選択ページのみ書き出し</button>
+        <button id="split-each-btn" class="btn-export" type="button">1ページずつ分割ZIP</button>
+        <button id="spread-btn" class="btn-spread" type="button">見開き（全ページ）で書き出し</button>
+        <button id="open-spread-viewer-btn" class="btn-viewer" type="button">見開き（全ページ）をViewerで開く</button>
+        <button id="spread-selected-btn" class="btn-spread" type="button">見開き（選択ページ）で書き出し</button>
+        <button id="open-spread-selected-viewer-btn" class="btn-viewer" type="button">見開き（選択ページ）をViewerで開く</button>
       </section>
 
       <section class="panel split">
@@ -44,7 +46,7 @@
       <section class="panel split">
         <label for="split-ranges-input">範囲分割（例: 1-3,4-6,7）</label>
         <input id="split-ranges-input" type="text" placeholder="1-3,4-6,7" />
-        <button id="split-ranges-btn" type="button">範囲で分割ZIP</button>
+        <button id="split-ranges-btn" class="btn-export" type="button">範囲で分割ZIP</button>
       </section>
 
       <section class="panel">
