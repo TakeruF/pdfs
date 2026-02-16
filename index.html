@@ -26,9 +26,19 @@
         <button id="clear-selection-btn" type="button">選択解除</button>
         <button id="delete-selected-btn" type="button">選択ページを削除</button>
         <button id="export-current-btn" type="button">現在の並びで書き出し</button>
+        <button id="open-current-viewer-btn" type="button">現在の並びをViewerで開く</button>
         <button id="export-selected-btn" type="button">選択ページのみ書き出し</button>
         <button id="split-each-btn" type="button">1ページずつ分割ZIP</button>
         <button id="spread-btn" type="button">見開き（2in1）で書き出し</button>
+        <button id="open-spread-viewer-btn" type="button">見開きをViewerで開く</button>
+      </section>
+
+      <section class="panel split">
+        <label for="binding-select">見開きの綴じ方向</label>
+        <select id="binding-select">
+          <option value="left">左綴じ（一般）</option>
+          <option value="right">右綴じ（国語・縦書き本）</option>
+        </select>
       </section>
 
       <section class="panel split">

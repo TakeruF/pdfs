@@ -22,11 +22,14 @@ const elements = {
   clearSelectionBtn: document.querySelector("#clear-selection-btn"),
   deleteSelectedBtn: document.querySelector("#delete-selected-btn"),
   exportCurrentBtn: document.querySelector("#export-current-btn"),
+  openCurrentViewerBtn: document.querySelector("#open-current-viewer-btn"),
   exportSelectedBtn: document.querySelector("#export-selected-btn"),
   splitEachBtn: document.querySelector("#split-each-btn"),
   splitRangesInput: document.querySelector("#split-ranges-input"),
   splitRangesBtn: document.querySelector("#split-ranges-btn"),
-  spreadBtn: document.querySelector("#spread-btn")
+  spreadBtn: document.querySelector("#spread-btn"),
+  openSpreadViewerBtn: document.querySelector("#open-spread-viewer-btn"),
+  bindingSelect: document.querySelector("#binding-select")
 };
 
 elements.fileInput.addEventListener("change", onFileSelected);
@@ -61,6 +64,15 @@ elements.exportCurrentBtn.addEventListener("click", () =>
     if (!requireLoaded()) return;
     const indices = state.pages.map((p) => p.srcIndex);
     await exportPdf(indices, `${baseName(state.fileName)}_ordered.pdf`);
+  })
+);
+elements.openCurrentViewerBtn.addEventListener("click", () =>
+  runBusyTask("Viewerで開くPDFを作成しています...", async () => {
+    if (!requireLoaded()) return;
+    const indices = state.pages.map((p) => p.srcIndex);
+    const bytes = await createPdfFromIndices(indices);
+    openInBrowserViewer(new Blob([bytes], { type: "application/pdf" }));
+    setStatus("ブラウザのPDF Viewerで開きました。");
   })
 );
 elements.exportSelectedBtn.addEventListener("click", () =>
@@ -108,9 +120,17 @@ elements.splitRangesBtn.addEventListener("click", () =>
 elements.spreadBtn.addEventListener("click", () =>
   runBusyTask("見開きPDFを書き出しています...", async () => {
     if (!requireLoaded()) return;
-    const bytes = await createSpreadPdf(state.pages.map((p) => p.srcIndex));
+    const bytes = await createSpreadPdf(state.pages.map((p) => p.srcIndex), currentBinding());
     downloadBlob(new Blob([bytes], { type: "application/pdf" }), `${baseName(state.fileName)}_spread.pdf`);
     setStatus("見開きPDFを書き出しました。");
+  })
+);
+elements.openSpreadViewerBtn.addEventListener("click", () =>
+  runBusyTask("見開きPDFを生成しています...", async () => {
+    if (!requireLoaded()) return;
+    const bytes = await createSpreadPdf(state.pages.map((p) => p.srcIndex), currentBinding());
+    openInBrowserViewer(new Blob([bytes], { type: "application/pdf" }));
+    setStatus("見開きPDFをブラウザのViewerで開きました。");
   })
 );
 
@@ -119,12 +139,18 @@ async function onFileSelected(event) {
   if (!file) return;
 
   await runBusyTask("PDFを読み込んでいます...", async () => {
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const loadingTask = pdfjsLib.getDocument({ data: bytes });
+    const raw = await file.arrayBuffer();
+    const normalized = normalizePdfBytes(new Uint8Array(raw));
+
+    // pdf.js worker が data バッファを transfer する場合があるため、用途ごとに分離する
+    const pdfjsBytes = new Uint8Array(normalized);
+    const appBytes = new Uint8Array(normalized);
+
+    const loadingTask = pdfjsLib.getDocument({ data: pdfjsBytes });
     const pdfjsDoc = await loadingTask.promise;
 
     state.fileName = file.name;
-    state.fileBytes = bytes;
+    state.fileBytes = appBytes;
     state.pdfjsDoc = pdfjsDoc;
     state.pages = Array.from({ length: pdfjsDoc.numPages }, (_, i) => ({
       srcIndex: i,
@@ -134,6 +160,30 @@ async function onFileSelected(event) {
     await renderPages();
     setStatus(`読み込み完了: ${file.name} (${pdfjsDoc.numPages}ページ)`);
   });
+}
+
+function normalizePdfBytes(bytes) {
+  const offset = findPdfHeaderOffset(bytes);
+  if (offset < 0) {
+    throw new Error("PDFヘッダー(%PDF-)を検出できませんでした。PDFファイルか確認してください。");
+  }
+  return offset === 0 ? bytes : bytes.slice(offset);
+}
+
+function findPdfHeaderOffset(bytes) {
+  const max = Math.min(bytes.length - 4, 4096);
+  for (let i = 0; i <= max; i += 1) {
+    if (
+      bytes[i] === 0x25 &&
+      bytes[i + 1] === 0x50 &&
+      bytes[i + 2] === 0x44 &&
+      bytes[i + 3] === 0x46 &&
+      bytes[i + 4] === 0x2d
+    ) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 async function renderPages() {
@@ -234,21 +284,29 @@ async function createPdfFromIndices(indices) {
   return out.save();
 }
 
-async function createSpreadPdf(indices) {
+async function createSpreadPdf(indices, binding = "left") {
   if (!state.fileBytes) throw new Error("PDF未読み込み");
   const src = await PDFDocument.load(state.fileBytes);
   const out = await PDFDocument.create();
+  const isRightBinding = binding === "right";
 
   for (let i = 0; i < indices.length; i += 2) {
-    const leftSrc = src.getPage(indices[i]);
-    const rightSrc = indices[i + 1] !== undefined ? src.getPage(indices[i + 1]) : null;
+    const firstSrc = src.getPage(indices[i]);
+    const secondSrc = indices[i + 1] !== undefined ? src.getPage(indices[i + 1]) : null;
+    const leftSrc = isRightBinding ? secondSrc : firstSrc;
+    const rightSrc = isRightBinding ? firstSrc : secondSrc;
+    if (!leftSrc && !rightSrc) continue;
 
-    const leftSize = leftSrc.getSize();
+    const leftSize = leftSrc ? leftSrc.getSize() : null;
     const rightSize = rightSrc ? rightSrc.getSize() : null;
-    const targetHeight = Math.max(leftSize.height, rightSize?.height ?? 0);
+    const targetHeight = Math.max(leftSize?.height ?? 0, rightSize?.height ?? 0);
 
-    const leftScale = targetHeight / leftSize.height;
-    const leftWidth = leftSize.width * leftScale;
+    let leftScale = 1;
+    let leftWidth = 0;
+    if (leftSize) {
+      leftScale = targetHeight / leftSize.height;
+      leftWidth = leftSize.width * leftScale;
+    }
 
     let rightScale = 1;
     let rightWidth = 0;
@@ -258,13 +316,15 @@ async function createSpreadPdf(indices) {
     }
 
     const outPage = out.addPage([leftWidth + rightWidth, targetHeight]);
-    const leftEmbedded = await out.embedPage(leftSrc);
-    outPage.drawPage(leftEmbedded, {
-      x: 0,
-      y: 0,
-      width: leftWidth,
-      height: targetHeight
-    });
+    if (leftSrc) {
+      const leftEmbedded = await out.embedPage(leftSrc);
+      outPage.drawPage(leftEmbedded, {
+        x: 0,
+        y: 0,
+        width: leftWidth,
+        height: targetHeight
+      });
+    }
 
     if (rightSrc) {
       const rightEmbedded = await out.embedPage(rightSrc);
@@ -321,6 +381,16 @@ function downloadBlob(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
+function openInBrowserViewer(blob) {
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener,noreferrer");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+function currentBinding() {
+  return elements.bindingSelect.value === "right" ? "right" : "left";
+}
+
 function requireLoaded() {
   if (state.pages.length) return true;
   setStatus("先にPDFを読み込んでください。");
@@ -348,10 +418,12 @@ function toggleButtons(disabled) {
     elements.clearSelectionBtn,
     elements.deleteSelectedBtn,
     elements.exportCurrentBtn,
+    elements.openCurrentViewerBtn,
     elements.exportSelectedBtn,
     elements.splitEachBtn,
     elements.splitRangesBtn,
-    elements.spreadBtn
+    elements.spreadBtn,
+    elements.openSpreadViewerBtn
   ]) {
     el.disabled = disabled;
   }
