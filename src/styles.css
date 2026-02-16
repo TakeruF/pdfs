@@ -1,0 +1,189 @@
+:root {
+  color-scheme: light;
+  --bg: #f3f6fb;
+  --panel: #ffffff;
+  --line: #d0d7e2;
+  --text: #182132;
+  --muted: #586780;
+  --primary: #0f4c81;
+  --primary-soft: #e4eef8;
+  --danger: #b3261e;
+  --danger-soft: #fde8e7;
+  --selected: #eaf4ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic",
+    Meiryo,
+    sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% 0%, #dce9fa 0%, transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%, #f9ebe5 0%, transparent 55%),
+    var(--bg);
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.topbar h1 {
+  margin: 0 0 4px;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+}
+
+.topbar p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.file-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--primary-soft);
+  border: 1px solid #bfd4ec;
+  border-radius: 10px;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.file-picker input {
+  display: none;
+}
+
+.hint {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.actions button,
+.split button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actions button:hover,
+.split button:hover {
+  border-color: #98a8bf;
+}
+
+#delete-selected-btn {
+  border-color: #efb3b0;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.split label {
+  grid-column: 1 / -1;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.split input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  width: 100%;
+}
+
+.status {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.pages {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.page-card {
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+  cursor: grab;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.page-card:active {
+  cursor: grabbing;
+}
+
+.page-card:hover {
+  transform: translateY(-2px);
+}
+
+.page-card.selected {
+  border-color: #66a1dd;
+  background: var(--selected);
+}
+
+.page-index {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.page-original {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.page-card canvas {
+  width: 100%;
+  height: auto;
+  border: 1px solid #ebeff5;
+  background: #fafcff;
+}
+
+@media (max-width: 700px) {
+  .app {
+    padding: 16px;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
