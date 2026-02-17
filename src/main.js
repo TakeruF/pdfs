@@ -14,7 +14,11 @@ const state = {
   pages: [],
   busy: false,
   dragIndex: null,
-  defaultPageSize: { ...A4_SIZE }
+  defaultPageSize: { ...A4_SIZE },
+  editable: true,
+  useIgnoreEncryption: false,
+  editErrorDetail: "",
+  previewSupported: true
 };
 
 const elements = {
@@ -52,9 +56,20 @@ const elements = {
   pages: document.querySelector("#pages")
 };
 
+state.previewSupported = !isSafariBrowser();
+if (!state.previewSupported) {
+  elements.openSourceViewerBtn.textContent = "Safariではプレビュー不可";
+  elements.openSourceViewerBtn.disabled = true;
+  setStatus("Safariではblobプレビューが不安定なため、プレビュー機能を無効化しています。");
+}
+
 elements.fileInput.addEventListener("change", onFileSelected);
 
 elements.openSourceViewerBtn.addEventListener("click", () => {
+  if (!state.previewSupported) {
+    setStatus("Safariではプレビュー機能を利用できません。", true);
+    return;
+  }
   if (!state.fileBytes) {
     setStatus("先にPDFを読み込んでください。");
     return;
@@ -93,6 +108,7 @@ elements.clearSelectionBtn.addEventListener("click", () => {
 
 elements.deleteSelectedBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
+  if (!requireEditable()) return;
   const afterDelete = state.pages.filter((p) => !p.selected);
   if (!afterDelete.length) {
     setStatus("すべてのページを削除することはできません。", true);
@@ -105,12 +121,14 @@ elements.deleteSelectedBtn.addEventListener("click", () => {
 
 elements.insertBlankStartBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
+  if (!requireEditable()) return;
   insertBlankAt(0);
   setStatus("先頭に空白ページを追加しました。", true);
 });
 
 elements.insertBlankBetweenBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
+  if (!requireEditable()) return;
   const n = Number(elements.insertAfterInput.value);
   if (!Number.isInteger(n) || n < 1 || n >= state.pages.length) {
     setStatus(`nは1から${Math.max(state.pages.length - 1, 1)}の整数で指定してください。`, true);
@@ -122,6 +140,7 @@ elements.insertBlankBetweenBtn.addEventListener("click", () => {
 
 elements.insertBlankEndBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
+  if (!requireEditable()) return;
   insertBlankAt(state.pages.length);
   setStatus("最後に空白ページを追加しました。", true);
 });
@@ -129,6 +148,7 @@ elements.insertBlankEndBtn.addEventListener("click", () => {
 elements.exportCurrentBtn.addEventListener("click", () =>
   runBusyTask("PDFを書き出しています...", async () => {
     if (!requireLoaded()) return;
+    if (!requireEditable()) return;
     await exportPdf(state.pages, `${baseName(state.fileName)}_ordered.pdf`);
   })
 );
@@ -136,6 +156,7 @@ elements.exportCurrentBtn.addEventListener("click", () =>
 elements.exportSelectedBtn.addEventListener("click", () =>
   runBusyTask("選択ページを書き出しています...", async () => {
     if (!requireLoaded()) return;
+    if (!requireEditable()) return;
     const pages = selectedPages();
     if (!pages.length) {
       setStatus("選択ページがありません。", true);
@@ -148,6 +169,7 @@ elements.exportSelectedBtn.addEventListener("click", () =>
 elements.rangeSplitExportBtn.addEventListener("click", () =>
   runBusyTask("範囲分割ZIPを作成しています...", async () => {
     if (!requireLoaded()) return;
+    if (!requireEditable()) return;
     const raw = elements.rangeSplitInput.value.trim();
     const groups = parseRangeGroups(raw, state.pages.length);
     if (!groups.length) {
@@ -169,6 +191,7 @@ elements.rangeSplitExportBtn.addEventListener("click", () =>
 elements.spreadBtn.addEventListener("click", () =>
   runBusyTask("見開きPDFを書き出しています...", async () => {
     if (!requireLoaded()) return;
+    if (!requireEditable()) return;
     const bytes = await createSpreadPdf(state.pages, currentBinding());
     downloadBlob(new Blob([bytes], { type: "application/pdf" }), `${baseName(state.fileName)}_spread.pdf`);
     setStatus("見開きPDFを書き出しました。", true);
@@ -178,6 +201,7 @@ elements.spreadBtn.addEventListener("click", () =>
 elements.spreadSelectedBtn.addEventListener("click", () =>
   runBusyTask("選択ページの見開きPDFを書き出しています...", async () => {
     if (!requireLoaded()) return;
+    if (!requireEditable()) return;
     const pages = selectedPages();
     if (!pages.length) {
       setStatus("見開き変換するページを選択してください。", true);
@@ -212,6 +236,11 @@ async function onFileSelected(event) {
       width: Math.max(1, Math.round(firstViewport.width)),
       height: Math.max(1, Math.round(firstViewport.height))
     };
+    const editCheck = await assessEditability(appBytes);
+    state.editable = editCheck.editable;
+    state.useIgnoreEncryption = editCheck.useIgnoreEncryption;
+    state.editErrorDetail = editCheck.detail;
+
     state.pages = Array.from({ length: pdfjsDoc.numPages }, (_, i) => createSourcePageEntry(i));
 
     elements.startScreen.classList.add("hidden");
@@ -223,7 +252,13 @@ async function onFileSelected(event) {
     elements.rangeSplitInput.value = "";
 
     await renderPages();
-    setStatus(`読み込み完了: ${file.name}`, true);
+    if (!state.editable) {
+      setStatus(`読み込み完了（編集不可）: ${state.editErrorDetail}`, true);
+    } else if (state.useIgnoreEncryption) {
+      setStatus(`読み込み完了（互換モード）: 暗号化PDFのため ignoreEncryption を使用します。`, true);
+    } else {
+      setStatus(`読み込み完了: ${file.name}`, true);
+    }
   });
 }
 
@@ -359,7 +394,7 @@ async function exportPdf(pageEntries, fileName) {
 
 async function createPdfFromEntries(pageEntries) {
   if (!state.fileBytes) throw new Error("PDF未読み込み");
-  const src = await PDFDocument.load(state.fileBytes);
+  const src = await PDFDocument.load(state.fileBytes, pdfLoadOptions());
   const out = await PDFDocument.create();
 
   for (const entry of pageEntries) {
@@ -376,7 +411,7 @@ async function createPdfFromEntries(pageEntries) {
 
 async function createSpreadPdf(pageEntries, binding = "left") {
   if (!state.fileBytes) throw new Error("PDF未読み込み");
-  const src = await PDFDocument.load(state.fileBytes);
+  const src = await PDFDocument.load(state.fileBytes, pdfLoadOptions());
   const out = await PDFDocument.create();
   const isRightBinding = binding === "right";
 
@@ -517,6 +552,12 @@ function selectedPages() {
   return state.pages.filter((p) => p.selected);
 }
 
+function requireEditable() {
+  if (state.editable) return true;
+  setStatus(`編集不可: ${state.editErrorDetail}`, true);
+  return false;
+}
+
 function requireLoaded() {
   if (state.pages.length) return true;
   setStatus("先にPDFを読み込んでください。");
@@ -540,7 +581,6 @@ async function runBusyTask(message, fn) {
 
 function toggleButtons(disabled) {
   for (const el of [
-    elements.openSourceViewerBtn,
     elements.showSelectionBtn,
     elements.showSpreadBtn,
     elements.selectAllBtn,
@@ -557,6 +597,7 @@ function toggleButtons(disabled) {
   ]) {
     el.disabled = disabled;
   }
+  elements.openSourceViewerBtn.disabled = disabled || !state.previewSupported;
   elements.insertAfterInput.disabled = disabled;
   elements.rangeSplitInput.disabled = disabled;
 }
@@ -567,4 +608,60 @@ function setStatus(text, inWorkspace = false) {
   } else {
     elements.status.textContent = text;
   }
+}
+
+function pdfLoadOptions() {
+  return state.useIgnoreEncryption ? { ignoreEncryption: true } : undefined;
+}
+
+async function assessEditability(bytes) {
+  try {
+    await PDFDocument.load(new Uint8Array(bytes));
+    return {
+      editable: true,
+      useIgnoreEncryption: false,
+      detail: ""
+    };
+  } catch (error) {
+    if (!isEncryptionError(error)) {
+      return {
+        editable: false,
+        useIgnoreEncryption: false,
+        detail: formatError(error)
+      };
+    }
+  }
+
+  try {
+    await PDFDocument.load(new Uint8Array(bytes), { ignoreEncryption: true });
+    return {
+      editable: true,
+      useIgnoreEncryption: true,
+      detail: ""
+    };
+  } catch (error) {
+    return {
+      editable: false,
+      useIgnoreEncryption: false,
+      detail: formatError(error)
+    };
+  }
+}
+
+function isEncryptionError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("encrypted") || message.includes("ignoreEncryption");
+}
+
+function formatError(error) {
+  if (error instanceof Error) {
+    return `[${error.name}] ${error.message}`;
+  }
+  return String(error);
+}
+
+function isSafariBrowser() {
+  const ua = navigator.userAgent;
+  const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|Chromium|Edg|OPR|FxiOS|Android/i.test(ua);
+  return isSafari;
 }
