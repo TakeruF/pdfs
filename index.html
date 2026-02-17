@@ -11,49 +11,78 @@
       <header class="topbar">
         <h1>PDF Organizer</h1>
         <p>ブラウザ内だけで PDF を編集します。ファイルはサーバーへ送信しません。</p>
-        <button id="open-source-viewer-btn" class="btn-viewer top-open-btn" type="button">
-          読み込みPDFをブラウザで開く
-        </button>
       </header>
 
-      <section class="panel">
+      <section id="start-screen" class="panel start-screen">
         <label class="file-picker">
           <input id="file-input" type="file" accept="application/pdf" />
           PDFを選択
         </label>
-        <div class="hint">ドラッグしてページ順を変更、クリックで選択</div>
-      </section>
-
-      <section class="panel actions">
-        <button id="select-all-btn" class="btn-select" type="button">全選択</button>
-        <button id="clear-selection-btn" class="btn-select" type="button">選択解除</button>
-        <button id="delete-selected-btn" class="btn-danger" type="button">選択ページを削除</button>
-        <button id="export-current-btn" class="btn-export" type="button">現在の並びで書き出し</button>
-        <button id="export-selected-btn" class="btn-export" type="button">選択ページのみ書き出し</button>
-        <button id="split-each-btn" class="btn-export" type="button">1ページずつ分割ZIP</button>
-        <button id="spread-btn" class="btn-spread" type="button">見開き（全ページ）で書き出し</button>
-        <button id="spread-selected-btn" class="btn-spread" type="button">見開き（選択ページ）で書き出し</button>
-      </section>
-
-      <section class="panel split">
-        <label for="binding-select">見開きの綴じ方向</label>
-        <select id="binding-select">
-          <option value="left">左綴じ（一般）</option>
-          <option value="right">右綴じ（国語・縦書き本）</option>
-        </select>
-      </section>
-
-      <section class="panel split">
-        <label for="split-ranges-input">範囲分割（例: 1-3,4-6,7）</label>
-        <input id="split-ranges-input" type="text" placeholder="1-3,4-6,7" />
-        <button id="split-ranges-btn" class="btn-export" type="button">範囲で分割ZIP</button>
-      </section>
-
-      <section class="panel">
         <div id="status" class="status">PDFを選択してください。</div>
       </section>
 
-      <section id="pages" class="pages" aria-live="polite"></section>
+      <section id="workspace" class="hidden">
+        <section class="panel">
+          <div id="file-summary" class="status"></div>
+          <div class="primary-actions">
+            <button id="open-source-viewer-btn" class="btn-viewer" type="button">ブラウザでプレビュー</button>
+            <button id="show-selection-btn" class="btn-export" type="button">ページを選択して書き出し</button>
+            <button id="show-spread-btn" class="btn-spread" type="button">見開きで書き出し</button>
+          </div>
+        </section>
+
+        <section id="selection-workbench" class="panel hidden">
+          <div class="hint">ページをクリックで選択、ドラッグで並び替え</div>
+          <div class="section-title">選択操作と書き出し</div>
+          <div class="actions">
+            <button id="select-all-btn" class="btn-select" type="button">全選択</button>
+            <button id="clear-selection-btn" class="btn-select" type="button">選択解除</button>
+            <button id="delete-selected-btn" class="btn-danger" type="button">選択ページを削除</button>
+            <button id="export-current-btn" class="btn-export" type="button">現在の並びで書き出し</button>
+            <button id="export-selected-btn" class="btn-export" type="button">選択ページのみ書き出し</button>
+          </div>
+          <div class="range-split-controls">
+            <div class="blank-title">範囲分割（ページ番号入力）</div>
+            <div class="range-help">例: <code>1-3,4-6,7</code> で3つのPDFをZIP出力</div>
+            <div class="blank-input-row">
+              <label for="range-split-input">分割範囲</label>
+              <input id="range-split-input" type="text" placeholder="1-3,4-6,7" />
+            </div>
+            <div class="actions">
+              <button id="range-split-export-btn" class="btn-export" type="button">範囲分割ZIPを書き出し</button>
+            </div>
+          </div>
+          <div class="blank-controls">
+            <div class="blank-title">空白ページを追加</div>
+            <div class="blank-input-row">
+              <label for="insert-after-input">nとn+1の間 (n)</label>
+              <input id="insert-after-input" type="number" min="1" step="1" placeholder="例: 3" />
+            </div>
+            <div class="actions">
+              <button id="insert-blank-start-btn" class="btn-blank" type="button">先頭に追加</button>
+              <button id="insert-blank-between-btn" class="btn-blank" type="button">nとn+1の間に追加</button>
+              <button id="insert-blank-end-btn" class="btn-blank" type="button">最後に追加</button>
+            </div>
+          </div>
+          <section id="pages" class="pages" aria-live="polite"></section>
+        </section>
+
+        <section id="spread-workbench" class="panel hidden">
+          <div class="spread-controls">
+            <label for="binding-select">見開きの綴じ方向</label>
+            <select id="binding-select">
+              <option value="left">左綴じ（一般）</option>
+              <option value="right">右綴じ（国語・縦書き本）</option>
+            </select>
+            <button id="spread-btn" class="btn-spread" type="button">見開き（全ページ）で書き出し</button>
+            <button id="spread-selected-btn" class="btn-spread" type="button">見開き（選択ページ）で書き出し</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div id="workspace-status" class="status"></div>
+        </section>
+      </section>
     </main>
 
     <script type="module" src="/src/main.js"></script>
