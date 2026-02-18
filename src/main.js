@@ -58,16 +58,16 @@ const elements = {
 
 state.previewSupported = !isSafariBrowser();
 if (!state.previewSupported) {
-  elements.openSourceViewerBtn.textContent = "Safariではプレビュー不可";
+  elements.openSourceViewerBtn.textContent = "iOS（WebKit）ではプレビュー不可";
   elements.openSourceViewerBtn.disabled = true;
-  setStatus("Safariではblobプレビューが不安定なため、プレビュー機能を無効化しています。");
+  setStatus("iOS（WebKit）ではblobプレビューが不安定なため、プレビュー機能を無効化しています。");
 }
 
 elements.fileInput.addEventListener("change", onFileSelected);
 
 elements.openSourceViewerBtn.addEventListener("click", () => {
   if (!state.previewSupported) {
-    setStatus("Safariではプレビュー機能を利用できません。", true);
+    setStatus("iOS（WebKit）ではプレビュー機能を利用できません。", true);
     return;
   }
   if (!state.fileBytes) {
