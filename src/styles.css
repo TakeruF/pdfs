@@ -1,9 +1,9 @@
 :root {
   color-scheme: light;
-  --bg: #f3f6fb;
+  --bg: rgb(250, 248, 245);
   --panel: #ffffff;
   --line: #d0d7e2;
-  --text: #182132;
+  --text: #000000;
   --muted: #586780;
   --primary: #0f4c81;
   --primary-soft: #e4eef8;
@@ -34,10 +34,7 @@ body {
     Meiryo,
     sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(1200px 600px at 10% 0%, #dce9fa 0%, transparent 60%),
-    radial-gradient(1000px 500px at 100% 0%, #f9ebe5 0%, transparent 55%),
-    var(--bg);
+  background: var(--bg);
 }
 
 .app {
@@ -52,9 +49,17 @@ body {
   letter-spacing: 0.02em;
 }
 
+.topbar {
+  background: rgb(65, 126, 138);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
 .topbar p {
   margin: 0 0 16px;
-  color: var(--muted);
+  color: #ffffff;
 }
 
 .top-open-btn {
