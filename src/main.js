@@ -8,6 +8,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 const A4_SIZE = { width: 595, height: 842 };
 
 const state = {
+  language: "ja",
   fileName: "",
   fileBytes: null,
   pdfjsDoc: null,
@@ -26,6 +27,7 @@ const elements = {
   startScreen: document.querySelector("#start-screen"),
   workspace: document.querySelector("#workspace"),
   fileInput: document.querySelector("#file-input"),
+  languageSelect: document.querySelector("#language-select"),
   inSitePreviewToggle: document.querySelector("#in-site-preview-toggle"),
   status: document.querySelector("#status"),
   workspaceStatus: document.querySelector("#workspace-status"),
@@ -58,11 +60,176 @@ const elements = {
   pages: document.querySelector("#pages")
 };
 
+const translations = {
+  ja: {
+    "label.language": "言語",
+    "title.app": "pdf organizer",
+    "desc.app": "ブラウザ内だけで PDF を編集します。ファイルはサーバーへ送信しません。",
+    "btn.selectPdf": "PDFを選択",
+    "label.previewInSite": "サイト内でPDFプレビューする",
+    "note.previewHeavy": "100ページ以上のPDFで動作が不安定な場合は、この設定をオフにすることを推奨します。",
+    "status.pleaseSelectPdf": "PDFを選択してください。",
+    "btn.previewBrowser": "ブラウザでプレビュー",
+    "btn.organizeAndExport": "ページを整理して書き出し",
+    "btn.exportSpread": "見開きで書き出し",
+    "hint.selectAndDrag": "ページをクリックで選択、ドラッグで並び替え",
+    "title.selection": "選択操作と書き出し",
+    "btn.selectAll": "全選択",
+    "btn.clearSelection": "選択解除",
+    "btn.deleteSelected": "選択ページを削除",
+    "btn.exportCurrentOrder": "現在の並びで書き出し",
+    "btn.exportSelectedOnly": "選択ページのみ書き出し",
+    "title.rangeSplit": "範囲分割（ページ番号入力）",
+    "hint.rangeSplitExample": "例: <code>1-3,4-6,7</code> で3つのPDFをZIP出力",
+    "label.rangeInput": "分割範囲",
+    "ph.rangeSplit": "1-3,4-6,7",
+    "btn.exportRangeZip": "範囲分割ZIPを書き出し",
+    "title.addBlank": "空白ページを追加",
+    "label.insertBetween": "nとn+1の間 (n)",
+    "ph.insertAfter": "例: 3",
+    "btn.addBlankStart": "先頭に追加",
+    "btn.addBlankBetween": "nとn+1の間に追加",
+    "btn.addBlankEnd": "最後に追加",
+    "label.binding": "見開きの綴じ方向",
+    "opt.bindingLeft": "左綴じ（一般）",
+    "opt.bindingRight": "右綴じ（国語・縦書き本）",
+    "btn.exportSpreadAll": "見開き（全ページ）で書き出し",
+    "btn.exportSpreadSelected": "見開き（選択ページ）で書き出し",
+    "status.previewUnsupportedShort": "iOS（WebKit）ではプレビュー不可",
+    "status.previewUnsupportedInit": "iOS（WebKit）ではblobプレビューが不安定なため、プレビュー機能を無効化しています。",
+    "status.previewUnsupportedUse": "iOS（WebKit）ではプレビュー機能を利用できません。",
+    "status.loadPdfFirst": "先にPDFを読み込んでください。",
+    "status.openedInBrowserViewer": "読み込みPDFをブラウザのViewerで開きました。",
+    "status.modeSelectionShown": "ページ選択モードを表示しました。",
+    "status.modeSpreadShown": "見開き書き出しモードを表示しました。",
+    "status.selectedAll": "すべてのページを選択しました。",
+    "status.selectionCleared": "選択を解除しました。",
+    "status.cannotDeleteAll": "すべてのページを削除することはできません。",
+    "status.deletedSelected": "選択ページを削除しました。",
+    "status.addedBlankStart": "先頭に空白ページを追加しました。",
+    "status.invalidNRange": "nは1から{max}の整数で指定してください。",
+    "status.addedBlankBetween": "{n}ページ目と{nPlusOne}ページ目の間に空白ページを追加しました。",
+    "status.addedBlankEnd": "最後に空白ページを追加しました。",
+    "status.exportingPdf": "PDFを書き出しています...",
+    "status.exportingSelected": "選択ページを書き出しています...",
+    "status.noSelectedPages": "選択ページがありません。",
+    "status.exportingRangeZip": "範囲分割ZIPを作成しています...",
+    "status.invalidRangeInput": "範囲の入力形式が不正です。例: 1-3,4-6,7",
+    "status.exportedRangeZip": "範囲分割ZIPを書き出しました。",
+    "status.exportingSpread": "見開きPDFを書き出しています...",
+    "status.exportedSpread": "見開きPDFを書き出しました。",
+    "status.exportingSpreadSelected": "選択ページの見開きPDFを書き出しています...",
+    "status.selectForSpread": "見開き変換するページを選択してください。",
+    "status.exportedSpreadSelected": "選択ページの見開きPDFを書き出しました。",
+    "status.loadingPdf": "PDFを読み込んでいます...",
+    "status.fileSummary": "{name} ({pages}ページ)",
+    "status.loadDoneNotEditable": "読み込み完了（編集不可）: {detail}",
+    "status.loadDoneHeavyAdvice": "読み込み完了: {name}。100ページ以上のため、不安定な場合は「サイト内でPDFプレビューする」をオフ推奨。",
+    "status.loadDoneCompat": "読み込み完了（互換モード）: 暗号化PDFのため ignoreEncryption を使用します。",
+    "status.loadDone": "読み込み完了: {name}",
+    "card.order": "並び順: {num}",
+    "card.blank": "空白ページ",
+    "card.original": "元ページ: {num}",
+    "card.previewFailed": "プレビュー失敗",
+    "card.previewOff": "プレビューOFF",
+    "card.blankPage": "BLANK PAGE",
+    "status.exportDone": "書き出し完了: {name}",
+    "error.noPdfHeader": "PDFヘッダー(%PDF-)を検出できませんでした。PDFファイルか確認してください。",
+    "status.editNotAllowed": "編集不可: {detail}",
+    "status.error": "エラー: {detail}",
+    "status.previewInSiteOn": "サイト内プレビューを有効にしました。",
+    "status.previewInSiteOff": "サイト内プレビューを無効にしました（軽量モード）。",
+    "error.notLoaded": "PDF未読み込み"
+  },
+  zh: {
+    "label.language": "语言",
+    "title.app": "pdf organizer",
+    "desc.app": "仅在浏览器内编辑 PDF。文件不会上传到服务器。",
+    "btn.selectPdf": "选择PDF",
+    "label.previewInSite": "站内预览PDF",
+    "note.previewHeavy": "当PDF超过100页且不稳定时，建议关闭此设置。",
+    "status.pleaseSelectPdf": "请选择PDF。",
+    "btn.previewBrowser": "在浏览器中预览",
+    "btn.organizeAndExport": "整理页面并导出",
+    "btn.exportSpread": "按跨页导出",
+    "hint.selectAndDrag": "点击页面可选择，拖拽可排序",
+    "title.selection": "选择与导出",
+    "btn.selectAll": "全选",
+    "btn.clearSelection": "取消选择",
+    "btn.deleteSelected": "删除已选页面",
+    "btn.exportCurrentOrder": "按当前顺序导出",
+    "btn.exportSelectedOnly": "仅导出已选页面",
+    "title.rangeSplit": "范围拆分（输入页码）",
+    "hint.rangeSplitExample": "示例: <code>1-3,4-6,7</code> 将输出3个PDF并打包ZIP",
+    "label.rangeInput": "拆分范围",
+    "ph.rangeSplit": "1-3,4-6,7",
+    "btn.exportRangeZip": "导出范围拆分ZIP",
+    "title.addBlank": "添加空白页",
+    "label.insertBetween": "插入到 n 与 n+1 之间 (n)",
+    "ph.insertAfter": "例如: 3",
+    "btn.addBlankStart": "添加到开头",
+    "btn.addBlankBetween": "添加到 n 与 n+1 之间",
+    "btn.addBlankEnd": "添加到末尾",
+    "label.binding": "跨页装订方向",
+    "opt.bindingLeft": "左装订（常规）",
+    "opt.bindingRight": "右装订（竖排/教材）",
+    "btn.exportSpreadAll": "导出跨页（全部）",
+    "btn.exportSpreadSelected": "导出跨页（已选）",
+    "status.previewUnsupportedShort": "iOS（WebKit）不支持预览",
+    "status.previewUnsupportedInit": "iOS（WebKit）下 blob 预览不稳定，已禁用预览功能。",
+    "status.previewUnsupportedUse": "iOS（WebKit）无法使用预览功能。",
+    "status.loadPdfFirst": "请先加载PDF。",
+    "status.openedInBrowserViewer": "已在浏览器查看器中打开PDF。",
+    "status.modeSelectionShown": "已显示页面选择模式。",
+    "status.modeSpreadShown": "已显示跨页导出模式。",
+    "status.selectedAll": "已全选所有页面。",
+    "status.selectionCleared": "已取消选择。",
+    "status.cannotDeleteAll": "不能删除全部页面。",
+    "status.deletedSelected": "已删除所选页面。",
+    "status.addedBlankStart": "已在开头添加空白页。",
+    "status.invalidNRange": "n 请输入 1 到 {max} 的整数。",
+    "status.addedBlankBetween": "已在第 {n} 页与第 {nPlusOne} 页之间添加空白页。",
+    "status.addedBlankEnd": "已在末尾添加空白页。",
+    "status.exportingPdf": "正在导出PDF...",
+    "status.exportingSelected": "正在导出所选页面...",
+    "status.noSelectedPages": "未选择任何页面。",
+    "status.exportingRangeZip": "正在生成范围拆分ZIP...",
+    "status.invalidRangeInput": "范围格式不正确。示例: 1-3,4-6,7",
+    "status.exportedRangeZip": "已导出范围拆分ZIP。",
+    "status.exportingSpread": "正在导出跨页PDF...",
+    "status.exportedSpread": "已导出跨页PDF。",
+    "status.exportingSpreadSelected": "正在导出已选页面的跨页PDF...",
+    "status.selectForSpread": "请选择要跨页转换的页面。",
+    "status.exportedSpreadSelected": "已导出已选页面的跨页PDF。",
+    "status.loadingPdf": "正在加载PDF...",
+    "status.fileSummary": "{name}（{pages}页）",
+    "status.loadDoneNotEditable": "加载完成（不可编辑）: {detail}",
+    "status.loadDoneHeavyAdvice": "加载完成: {name}。页数超过100时若不稳定，建议关闭“站内预览PDF”。",
+    "status.loadDoneCompat": "加载完成（兼容模式）: 因PDF加密，已使用 ignoreEncryption。",
+    "status.loadDone": "加载完成: {name}",
+    "card.order": "顺序: {num}",
+    "card.blank": "空白页",
+    "card.original": "原始页: {num}",
+    "card.previewFailed": "预览失败",
+    "card.previewOff": "预览已关闭",
+    "card.blankPage": "BLANK PAGE",
+    "status.exportDone": "导出完成: {name}",
+    "error.noPdfHeader": "未检测到PDF头(%PDF-)。请确认文件是PDF。",
+    "status.editNotAllowed": "不可编辑: {detail}",
+    "status.error": "错误: {detail}",
+    "status.previewInSiteOn": "已启用站内预览。",
+    "status.previewInSiteOff": "已关闭站内预览（轻量模式）。",
+    "error.notLoaded": "PDF未加载"
+  }
+};
+
+initLanguage();
+
 state.previewSupported = !isSafariBrowser();
 if (!state.previewSupported) {
-  elements.openSourceViewerBtn.textContent = "iOS（WebKit）ではプレビュー不可";
+  elements.openSourceViewerBtn.textContent = t("status.previewUnsupportedShort");
   elements.openSourceViewerBtn.disabled = true;
-  setStatus("iOS（WebKit）ではblobプレビューが不安定なため、プレビュー機能を無効化しています。");
+  setStatus(t("status.previewUnsupportedInit"));
 }
 
 elements.fileInput.addEventListener("change", onFileSelected);
@@ -72,8 +239,8 @@ elements.inSitePreviewToggle.addEventListener("change", () => {
     renderPages();
     setStatus(
       state.inSitePreviewEnabled
-        ? "サイト内プレビューを有効にしました。"
-        : "サイト内プレビューを無効にしました（軽量モード）。",
+        ? t("status.previewInSiteOn")
+        : t("status.previewInSiteOff"),
       true
     );
   }
@@ -81,43 +248,43 @@ elements.inSitePreviewToggle.addEventListener("change", () => {
 
 elements.openSourceViewerBtn.addEventListener("click", () => {
   if (!state.previewSupported) {
-    setStatus("iOS（WebKit）ではプレビュー機能を利用できません。", true);
+    setStatus(t("status.previewUnsupportedUse"), true);
     return;
   }
   if (!state.fileBytes) {
-    setStatus("先にPDFを読み込んでください。");
+    setStatus(t("status.loadPdfFirst"));
     return;
   }
   openInBrowserViewer(new Blob([state.fileBytes], { type: "application/pdf" }));
-  setStatus("読み込みPDFをブラウザのViewerで開きました。", true);
+  setStatus(t("status.openedInBrowserViewer"), true);
 });
 
 elements.showSelectionBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
   elements.selectionWorkbench.classList.remove("hidden");
   elements.spreadWorkbench.classList.add("hidden");
-  setStatus("ページ選択モードを表示しました。", true);
+  setStatus(t("status.modeSelectionShown"), true);
 });
 
 elements.showSpreadBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
   elements.spreadWorkbench.classList.remove("hidden");
   elements.selectionWorkbench.classList.add("hidden");
-  setStatus("見開き書き出しモードを表示しました。", true);
+  setStatus(t("status.modeSpreadShown"), true);
 });
 
 elements.selectAllBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
   state.pages.forEach((p) => (p.selected = true));
   renderPages();
-  setStatus("すべてのページを選択しました。", true);
+  setStatus(t("status.selectedAll"), true);
 });
 
 elements.clearSelectionBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
   state.pages.forEach((p) => (p.selected = false));
   renderPages();
-  setStatus("選択を解除しました。", true);
+  setStatus(t("status.selectionCleared"), true);
 });
 
 elements.deleteSelectedBtn.addEventListener("click", () => {
@@ -125,19 +292,19 @@ elements.deleteSelectedBtn.addEventListener("click", () => {
   if (!requireEditable()) return;
   const afterDelete = state.pages.filter((p) => !p.selected);
   if (!afterDelete.length) {
-    setStatus("すべてのページを削除することはできません。", true);
+    setStatus(t("status.cannotDeleteAll"), true);
     return;
   }
   state.pages = afterDelete;
   renderPages();
-  setStatus("選択ページを削除しました。", true);
+  setStatus(t("status.deletedSelected"), true);
 });
 
 elements.insertBlankStartBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
   if (!requireEditable()) return;
   insertBlankAt(0);
-  setStatus("先頭に空白ページを追加しました。", true);
+  setStatus(t("status.addedBlankStart"), true);
 });
 
 elements.insertBlankBetweenBtn.addEventListener("click", () => {
@@ -145,22 +312,22 @@ elements.insertBlankBetweenBtn.addEventListener("click", () => {
   if (!requireEditable()) return;
   const n = Number(elements.insertAfterInput.value);
   if (!Number.isInteger(n) || n < 1 || n >= state.pages.length) {
-    setStatus(`nは1から${Math.max(state.pages.length - 1, 1)}の整数で指定してください。`, true);
+    setStatus(t("status.invalidNRange", { max: Math.max(state.pages.length - 1, 1) }), true);
     return;
   }
   insertBlankAt(n);
-  setStatus(`${n}ページ目と${n + 1}ページ目の間に空白ページを追加しました。`, true);
+  setStatus(t("status.addedBlankBetween", { n, nPlusOne: n + 1 }), true);
 });
 
 elements.insertBlankEndBtn.addEventListener("click", () => {
   if (!requireLoaded()) return;
   if (!requireEditable()) return;
   insertBlankAt(state.pages.length);
-  setStatus("最後に空白ページを追加しました。", true);
+  setStatus(t("status.addedBlankEnd"), true);
 });
 
 elements.exportCurrentBtn.addEventListener("click", () =>
-  runBusyTask("PDFを書き出しています...", async () => {
+  runBusyTask(t("status.exportingPdf"), async () => {
     if (!requireLoaded()) return;
     if (!requireEditable()) return;
     await exportPdf(state.pages, `${baseName(state.fileName)}_ordered.pdf`);
@@ -168,12 +335,12 @@ elements.exportCurrentBtn.addEventListener("click", () =>
 );
 
 elements.exportSelectedBtn.addEventListener("click", () =>
-  runBusyTask("選択ページを書き出しています...", async () => {
+  runBusyTask(t("status.exportingSelected"), async () => {
     if (!requireLoaded()) return;
     if (!requireEditable()) return;
     const pages = selectedPages();
     if (!pages.length) {
-      setStatus("選択ページがありません。", true);
+      setStatus(t("status.noSelectedPages"), true);
       return;
     }
     await exportPdf(pages, `${baseName(state.fileName)}_selected.pdf`);
@@ -181,13 +348,13 @@ elements.exportSelectedBtn.addEventListener("click", () =>
 );
 
 elements.rangeSplitExportBtn.addEventListener("click", () =>
-  runBusyTask("範囲分割ZIPを作成しています...", async () => {
+  runBusyTask(t("status.exportingRangeZip"), async () => {
     if (!requireLoaded()) return;
     if (!requireEditable()) return;
     const raw = elements.rangeSplitInput.value.trim();
     const groups = parseRangeGroups(raw, state.pages.length);
     if (!groups.length) {
-      setStatus("範囲の入力形式が不正です。例: 1-3,4-6,7", true);
+      setStatus(t("status.invalidRangeInput"), true);
       return;
     }
     const zip = new JSZip();
@@ -198,32 +365,32 @@ elements.rangeSplitExportBtn.addEventListener("click", () =>
     }
     const blob = await zip.generateAsync({ type: "blob" });
     downloadBlob(blob, `${baseName(state.fileName)}_ranges.zip`);
-    setStatus("範囲分割ZIPを書き出しました。", true);
+    setStatus(t("status.exportedRangeZip"), true);
   })
 );
 
 elements.spreadBtn.addEventListener("click", () =>
-  runBusyTask("見開きPDFを書き出しています...", async () => {
+  runBusyTask(t("status.exportingSpread"), async () => {
     if (!requireLoaded()) return;
     if (!requireEditable()) return;
     const bytes = await createSpreadPdf(state.pages, currentBinding());
     downloadBlob(new Blob([bytes], { type: "application/pdf" }), `${baseName(state.fileName)}_spread.pdf`);
-    setStatus("見開きPDFを書き出しました。", true);
+    setStatus(t("status.exportedSpread"), true);
   })
 );
 
 elements.spreadSelectedBtn.addEventListener("click", () =>
-  runBusyTask("選択ページの見開きPDFを書き出しています...", async () => {
+  runBusyTask(t("status.exportingSpreadSelected"), async () => {
     if (!requireLoaded()) return;
     if (!requireEditable()) return;
     const pages = selectedPages();
     if (!pages.length) {
-      setStatus("見開き変換するページを選択してください。", true);
+      setStatus(t("status.selectForSpread"), true);
       return;
     }
     const bytes = await createSpreadPdf(pages, currentBinding());
     downloadBlob(new Blob([bytes], { type: "application/pdf" }), `${baseName(state.fileName)}_spread_selected.pdf`);
-    setStatus("選択ページの見開きPDFを書き出しました。", true);
+    setStatus(t("status.exportedSpreadSelected"), true);
   })
 );
 
@@ -231,7 +398,7 @@ async function onFileSelected(event) {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  await runBusyTask("PDFを読み込んでいます...", async () => {
+  await runBusyTask(t("status.loadingPdf"), async () => {
     const raw = await file.arrayBuffer();
     const normalized = normalizePdfBytes(new Uint8Array(raw));
 
@@ -262,22 +429,19 @@ async function onFileSelected(event) {
     elements.workspace.classList.remove("hidden");
     elements.selectionWorkbench.classList.add("hidden");
     elements.spreadWorkbench.classList.add("hidden");
-    elements.fileSummary.textContent = `${file.name} (${pdfjsDoc.numPages}ページ)`;
+    elements.fileSummary.textContent = t("status.fileSummary", { name: file.name, pages: pdfjsDoc.numPages });
     elements.insertAfterInput.value = "";
     elements.rangeSplitInput.value = "";
 
     await renderPages();
     if (!state.editable) {
-      setStatus(`読み込み完了（編集不可）: ${state.editErrorDetail}`, true);
+      setStatus(t("status.loadDoneNotEditable", { detail: state.editErrorDetail }), true);
     } else if (pdfjsDoc.numPages >= 100 && state.inSitePreviewEnabled) {
-      setStatus(
-        `読み込み完了: ${file.name}。100ページ以上のため、不安定な場合は「サイト内でPDFプレビューする」をオフ推奨。`,
-        true
-      );
+      setStatus(t("status.loadDoneHeavyAdvice", { name: file.name }), true);
     } else if (state.useIgnoreEncryption) {
-      setStatus(`読み込み完了（互換モード）: 暗号化PDFのため ignoreEncryption を使用します。`, true);
+      setStatus(t("status.loadDoneCompat"), true);
     } else {
-      setStatus(`読み込み完了: ${file.name}`, true);
+      setStatus(t("status.loadDone", { name: file.name }), true);
     }
   });
 }
@@ -345,12 +509,14 @@ async function renderPages() {
 
     const indexEl = document.createElement("div");
     indexEl.className = "page-index";
-    indexEl.textContent = `並び順: ${idx + 1}`;
+    indexEl.textContent = t("card.order", { num: idx + 1 });
     card.append(indexEl);
 
     const originalEl = document.createElement("div");
     originalEl.className = "page-original";
-    originalEl.textContent = pageState.isBlank ? "空白ページ" : `元ページ: ${pageState.srcIndex + 1}`;
+    originalEl.textContent = pageState.isBlank
+      ? t("card.blank")
+      : t("card.original", { num: pageState.srcIndex + 1 });
     card.append(originalEl);
 
     if (state.inSitePreviewEnabled) {
@@ -369,13 +535,13 @@ async function renderPages() {
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = "#8f1f16";
           ctx.font = "12px sans-serif";
-          ctx.fillText("プレビュー失敗", 20, 24);
+          ctx.fillText(t("card.previewFailed"), 20, 24);
         });
       }
     } else {
       const off = document.createElement("div");
       off.className = "page-thumb-off";
-      off.textContent = "プレビューOFF";
+      off.textContent = t("card.previewOff");
       card.append(off);
     }
 
@@ -397,7 +563,7 @@ function renderBlankThumbnail(canvas) {
   ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
   ctx.fillStyle = "#687689";
   ctx.font = "bold 12px sans-serif";
-  ctx.fillText("BLANK PAGE", 28, 104);
+  ctx.fillText(t("card.blankPage"), 28, 104);
 }
 
 async function renderThumbnail(canvas, srcPageIndex) {
@@ -416,11 +582,11 @@ async function renderThumbnail(canvas, srcPageIndex) {
 async function exportPdf(pageEntries, fileName) {
   const bytes = await createPdfFromEntries(pageEntries);
   downloadBlob(new Blob([bytes], { type: "application/pdf" }), fileName);
-  setStatus(`書き出し完了: ${fileName}`, true);
+  setStatus(t("status.exportDone", { name: fileName }), true);
 }
 
 async function createPdfFromEntries(pageEntries) {
-  if (!state.fileBytes) throw new Error("PDF未読み込み");
+  if (!state.fileBytes) throw new Error(t("error.notLoaded"));
   const src = await PDFDocument.load(state.fileBytes, pdfLoadOptions());
   const out = await PDFDocument.create();
 
@@ -437,7 +603,7 @@ async function createPdfFromEntries(pageEntries) {
 }
 
 async function createSpreadPdf(pageEntries, binding = "left") {
-  if (!state.fileBytes) throw new Error("PDF未読み込み");
+  if (!state.fileBytes) throw new Error(t("error.notLoaded"));
   const src = await PDFDocument.load(state.fileBytes, pdfLoadOptions());
   const out = await PDFDocument.create();
   const isRightBinding = binding === "right";
@@ -506,7 +672,7 @@ function resolveSpreadInfo(entry, src) {
 function normalizePdfBytes(bytes) {
   const offset = findPdfHeaderOffset(bytes);
   if (offset < 0) {
-    throw new Error("PDFヘッダー(%PDF-)を検出できませんでした。PDFファイルか確認してください。");
+    throw new Error(t("error.noPdfHeader"));
   }
   return offset === 0 ? bytes : bytes.slice(offset);
 }
@@ -581,13 +747,13 @@ function selectedPages() {
 
 function requireEditable() {
   if (state.editable) return true;
-  setStatus(`編集不可: ${state.editErrorDetail}`, true);
+  setStatus(t("status.editNotAllowed", { detail: state.editErrorDetail }), true);
   return false;
 }
 
 function requireLoaded() {
   if (state.pages.length) return true;
-  setStatus("先にPDFを読み込んでください。");
+  setStatus(t("status.loadPdfFirst"));
   return false;
 }
 
@@ -599,7 +765,7 @@ async function runBusyTask(message, fn) {
   try {
     await fn();
   } catch (error) {
-    setStatus(`エラー: ${error instanceof Error ? error.message : String(error)}`, true);
+    setStatus(t("status.error", { detail: error instanceof Error ? error.message : String(error) }), true);
   } finally {
     state.busy = false;
     toggleButtons(false);
@@ -635,6 +801,63 @@ function setStatus(text, inWorkspace = false) {
   } else {
     elements.status.textContent = text;
   }
+}
+
+function initLanguage() {
+  const saved = localStorage.getItem("pdf-organizer-lang");
+  const defaultLang = saved || detectLanguageFromBrowser();
+  setLanguage(defaultLang, false);
+  elements.languageSelect.addEventListener("change", () => {
+    setLanguage(elements.languageSelect.value, true);
+  });
+}
+
+function setLanguage(lang, save = true) {
+  state.language = lang === "zh" ? "zh" : "ja";
+  document.documentElement.lang = state.language === "zh" ? "zh" : "ja";
+  elements.languageSelect.value = state.language;
+  applyStaticTexts();
+  if (!state.previewSupported) {
+    elements.openSourceViewerBtn.textContent = t("status.previewUnsupportedShort");
+  }
+  if (state.pdfjsDoc && state.fileName) {
+    elements.fileSummary.textContent = t("status.fileSummary", { name: state.fileName, pages: state.pdfjsDoc.numPages });
+    if (state.pages.length) renderPages();
+  }
+  if (save) localStorage.setItem("pdf-organizer-lang", state.language);
+}
+
+function detectLanguageFromBrowser() {
+  const langs = [navigator.language, ...(navigator.languages || [])].filter(Boolean);
+  return langs.some((l) => l.toLowerCase().startsWith("zh")) ? "zh" : "ja";
+}
+
+function applyStaticTexts() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (!key) return;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-html");
+    if (!key) return;
+    el.innerHTML = t(key);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (!key) return;
+    el.setAttribute("placeholder", t(key));
+  });
+}
+
+function t(key, vars = {}) {
+  const dict = translations[state.language] || translations.ja;
+  const fallback = translations.ja;
+  let text = dict[key] ?? fallback[key] ?? key;
+  for (const [k, value] of Object.entries(vars)) {
+    text = text.replaceAll(`{${k}}`, String(value));
+  }
+  return text;
 }
 
 function pdfLoadOptions() {

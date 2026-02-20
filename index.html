@@ -9,71 +9,78 @@
   <body>
     <main class="app">
       <header class="topbar">
-        <h1>pdf organizer</h1>
-        <p>ブラウザ内だけで PDF を編集します。ファイルはサーバーへ送信しません。</p>
+        <div class="lang-bar">
+          <label for="language-select" data-i18n="label.language">言語</label>
+          <select id="language-select" aria-label="language">
+            <option value="ja">日本語</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
+        <h1 data-i18n="title.app">pdf organizer</h1>
+        <p data-i18n="desc.app">ブラウザ内だけで PDF を編集します。ファイルはサーバーへ送信しません。</p>
       </header>
 
       <section id="start-screen" class="panel start-screen">
         <div class="start-controls">
           <label class="file-picker">
             <input id="file-input" type="file" accept="application/pdf" />
-            PDFを選択
+            <span data-i18n="btn.selectPdf">PDFを選択</span>
           </label>
           <label class="preview-toggle" for="in-site-preview-toggle">
             <input id="in-site-preview-toggle" type="checkbox" checked />
             <span class="preview-switch" aria-hidden="true">
               <span class="preview-knob"></span>
             </span>
-            <span class="preview-toggle-text">サイト内でPDFプレビューする</span>
+            <span class="preview-toggle-text" data-i18n="label.previewInSite">サイト内でPDFプレビューする</span>
           </label>
         </div>
-        <div class="preview-note">
+        <div class="preview-note" data-i18n="note.previewHeavy">
           100ページ以上のPDFで動作が不安定な場合は、この設定をオフにすることを推奨します。
         </div>
-        <div id="status" class="status">PDFを選択してください。</div>
+        <div id="status" class="status" data-i18n="status.pleaseSelectPdf">PDFを選択してください。</div>
       </section>
 
       <section id="workspace" class="hidden">
         <section class="panel">
           <div id="file-summary" class="status"></div>
           <div class="primary-actions">
-            <button id="open-source-viewer-btn" class="btn-viewer" type="button">ブラウザでプレビュー</button>
-            <button id="show-selection-btn" class="btn-export" type="button">ページを整理して書き出し</button>
-            <button id="show-spread-btn" class="btn-spread" type="button">見開きで書き出し</button>
+            <button id="open-source-viewer-btn" class="btn-viewer" type="button" data-i18n="btn.previewBrowser">ブラウザでプレビュー</button>
+            <button id="show-selection-btn" class="btn-export" type="button" data-i18n="btn.organizeAndExport">ページを整理して書き出し</button>
+            <button id="show-spread-btn" class="btn-spread" type="button" data-i18n="btn.exportSpread">見開きで書き出し</button>
           </div>
         </section>
 
         <section id="selection-workbench" class="panel hidden">
-          <div class="hint">ページをクリックで選択、ドラッグで並び替え</div>
-          <div class="section-title">選択操作と書き出し</div>
+          <div class="hint" data-i18n="hint.selectAndDrag">ページをクリックで選択、ドラッグで並び替え</div>
+          <div class="section-title" data-i18n="title.selection">選択操作と書き出し</div>
           <div class="actions">
-            <button id="select-all-btn" class="btn-select" type="button">全選択</button>
-            <button id="clear-selection-btn" class="btn-select" type="button">選択解除</button>
-            <button id="delete-selected-btn" class="btn-danger" type="button">選択ページを削除</button>
-            <button id="export-current-btn" class="btn-export" type="button">現在の並びで書き出し</button>
-            <button id="export-selected-btn" class="btn-export" type="button">選択ページのみ書き出し</button>
+            <button id="select-all-btn" class="btn-select" type="button" data-i18n="btn.selectAll">全選択</button>
+            <button id="clear-selection-btn" class="btn-select" type="button" data-i18n="btn.clearSelection">選択解除</button>
+            <button id="delete-selected-btn" class="btn-danger" type="button" data-i18n="btn.deleteSelected">選択ページを削除</button>
+            <button id="export-current-btn" class="btn-export" type="button" data-i18n="btn.exportCurrentOrder">現在の並びで書き出し</button>
+            <button id="export-selected-btn" class="btn-export" type="button" data-i18n="btn.exportSelectedOnly">選択ページのみ書き出し</button>
           </div>
           <div class="range-split-controls">
-            <div class="blank-title">範囲分割（ページ番号入力）</div>
-            <div class="range-help">例: <code>1-3,4-6,7</code> で3つのPDFをZIP出力</div>
+            <div class="blank-title" data-i18n="title.rangeSplit">範囲分割（ページ番号入力）</div>
+            <div class="range-help" data-i18n-html="hint.rangeSplitExample">例: <code>1-3,4-6,7</code> で3つのPDFをZIP出力</div>
             <div class="blank-input-row">
-              <label for="range-split-input">分割範囲</label>
-              <input id="range-split-input" type="text" placeholder="1-3,4-6,7" />
+              <label for="range-split-input" data-i18n="label.rangeInput">分割範囲</label>
+              <input id="range-split-input" type="text" placeholder="1-3,4-6,7" data-i18n-placeholder="ph.rangeSplit" />
             </div>
             <div class="actions">
-              <button id="range-split-export-btn" class="btn-export" type="button">範囲分割ZIPを書き出し</button>
+              <button id="range-split-export-btn" class="btn-export" type="button" data-i18n="btn.exportRangeZip">範囲分割ZIPを書き出し</button>
             </div>
           </div>
           <div class="blank-controls">
-            <div class="blank-title">空白ページを追加</div>
+            <div class="blank-title" data-i18n="title.addBlank">空白ページを追加</div>
             <div class="blank-input-row">
-              <label for="insert-after-input">nとn+1の間 (n)</label>
-              <input id="insert-after-input" type="number" min="1" step="1" placeholder="例: 3" />
+              <label for="insert-after-input" data-i18n="label.insertBetween">nとn+1の間 (n)</label>
+              <input id="insert-after-input" type="number" min="1" step="1" placeholder="例: 3" data-i18n-placeholder="ph.insertAfter" />
             </div>
             <div class="actions">
-              <button id="insert-blank-start-btn" class="btn-blank" type="button">先頭に追加</button>
-              <button id="insert-blank-between-btn" class="btn-blank" type="button">nとn+1の間に追加</button>
-              <button id="insert-blank-end-btn" class="btn-blank" type="button">最後に追加</button>
+              <button id="insert-blank-start-btn" class="btn-blank" type="button" data-i18n="btn.addBlankStart">先頭に追加</button>
+              <button id="insert-blank-between-btn" class="btn-blank" type="button" data-i18n="btn.addBlankBetween">nとn+1の間に追加</button>
+              <button id="insert-blank-end-btn" class="btn-blank" type="button" data-i18n="btn.addBlankEnd">最後に追加</button>
             </div>
           </div>
           <section id="pages" class="pages" aria-live="polite"></section>
@@ -81,13 +88,13 @@
 
         <section id="spread-workbench" class="panel hidden">
           <div class="spread-controls">
-            <label for="binding-select">見開きの綴じ方向</label>
+            <label for="binding-select" data-i18n="label.binding">見開きの綴じ方向</label>
             <select id="binding-select">
-              <option value="left">左綴じ（一般）</option>
-              <option value="right">右綴じ（国語・縦書き本）</option>
+              <option value="left" data-i18n="opt.bindingLeft">左綴じ（一般）</option>
+              <option value="right" data-i18n="opt.bindingRight">右綴じ（国語・縦書き本）</option>
             </select>
-            <button id="spread-btn" class="btn-spread" type="button">見開き（全ページ）で書き出し</button>
-            <button id="spread-selected-btn" class="btn-spread" type="button">見開き（選択ページ）で書き出し</button>
+            <button id="spread-btn" class="btn-spread" type="button" data-i18n="btn.exportSpreadAll">見開き（全ページ）で書き出し</button>
+            <button id="spread-selected-btn" class="btn-spread" type="button" data-i18n="btn.exportSpreadSelected">見開き（選択ページ）で書き出し</button>
           </div>
         </section>
 
