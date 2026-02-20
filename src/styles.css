@@ -52,9 +52,10 @@ body {
 .topbar {
   background: rgb(25, 29, 117);
   color: #ffffff;
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  border-radius: 0;
+  padding: 14px 16px 10px;
+  margin-bottom: 14px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
 }
 
 .topbar p {
@@ -80,10 +81,10 @@ body {
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  background: var(--primary-soft);
-  border: 1px solid #b9c2ea;
-  border-radius: 10px;
-  color: var(--primary);
+  background: rgb(39, 37, 31);
+  border: 1px solid rgb(39, 37, 31);
+  border-radius: 12px;
+  color: #ffffff;
   font-weight: 700;
   cursor: pointer;
 }
