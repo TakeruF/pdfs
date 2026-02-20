@@ -18,13 +18,15 @@ const state = {
   editable: true,
   useIgnoreEncryption: false,
   editErrorDetail: "",
-  previewSupported: true
+  previewSupported: true,
+  inSitePreviewEnabled: true
 };
 
 const elements = {
   startScreen: document.querySelector("#start-screen"),
   workspace: document.querySelector("#workspace"),
   fileInput: document.querySelector("#file-input"),
+  inSitePreviewToggle: document.querySelector("#in-site-preview-toggle"),
   status: document.querySelector("#status"),
   workspaceStatus: document.querySelector("#workspace-status"),
   fileSummary: document.querySelector("#file-summary"),
@@ -64,6 +66,18 @@ if (!state.previewSupported) {
 }
 
 elements.fileInput.addEventListener("change", onFileSelected);
+elements.inSitePreviewToggle.addEventListener("change", () => {
+  state.inSitePreviewEnabled = elements.inSitePreviewToggle.checked;
+  if (state.pages.length) {
+    renderPages();
+    setStatus(
+      state.inSitePreviewEnabled
+        ? "サイト内プレビューを有効にしました。"
+        : "サイト内プレビューを無効にしました（軽量モード）。",
+      true
+    );
+  }
+});
 
 elements.openSourceViewerBtn.addEventListener("click", () => {
   if (!state.previewSupported) {
@@ -232,6 +246,7 @@ async function onFileSelected(event) {
     state.fileName = file.name;
     state.fileBytes = appBytes;
     state.pdfjsDoc = pdfjsDoc;
+    state.inSitePreviewEnabled = elements.inSitePreviewToggle.checked;
     state.defaultPageSize = {
       width: Math.max(1, Math.round(firstViewport.width)),
       height: Math.max(1, Math.round(firstViewport.height))
@@ -254,6 +269,11 @@ async function onFileSelected(event) {
     await renderPages();
     if (!state.editable) {
       setStatus(`読み込み完了（編集不可）: ${state.editErrorDetail}`, true);
+    } else if (pdfjsDoc.numPages >= 100 && state.inSitePreviewEnabled) {
+      setStatus(
+        `読み込み完了: ${file.name}。100ページ以上のため、不安定な場合は「サイト内でPDFプレビューする」をオフ推奨。`,
+        true
+      );
     } else if (state.useIgnoreEncryption) {
       setStatus(`読み込み完了（互換モード）: 暗号化PDFのため ignoreEncryption を使用します。`, true);
     } else {
@@ -333,26 +353,33 @@ async function renderPages() {
     originalEl.textContent = pageState.isBlank ? "空白ページ" : `元ページ: ${pageState.srcIndex + 1}`;
     card.append(originalEl);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = 150;
-    canvas.height = 200;
-    card.append(canvas);
+    if (state.inSitePreviewEnabled) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 150;
+      canvas.height = 200;
+      card.append(canvas);
+
+      if (pageState.isBlank) {
+        renderBlankThumbnail(canvas);
+      } else {
+        renderThumbnail(canvas, pageState.srcIndex).catch(() => {
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.fillStyle = "#fef0ef";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#8f1f16";
+          ctx.font = "12px sans-serif";
+          ctx.fillText("プレビュー失敗", 20, 24);
+        });
+      }
+    } else {
+      const off = document.createElement("div");
+      off.className = "page-thumb-off";
+      off.textContent = "プレビューOFF";
+      card.append(off);
+    }
 
     fragment.append(card);
-
-    if (pageState.isBlank) {
-      renderBlankThumbnail(canvas);
-    } else {
-      renderThumbnail(canvas, pageState.srcIndex).catch(() => {
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.fillStyle = "#fef0ef";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#8f1f16";
-        ctx.font = "12px sans-serif";
-        ctx.fillText("プレビュー失敗", 20, 24);
-      });
-    }
   }
 
   elements.pages.append(fragment);
