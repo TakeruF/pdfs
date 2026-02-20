@@ -15,7 +15,7 @@
   --export: rgb(25, 29, 117);
   --export-soft: #eaedfb;
   --viewer: #ffffff;
-  --viewer-soft: rgb(25, 29, 117);
+  --viewer-soft: rgb(39, 37, 31);
   --spread: rgb(25, 29, 117);
   --spread-soft: #eaedfb;
   --blank: #1f266c;
@@ -50,7 +50,7 @@ body {
 }
 
 .topbar {
-  background: rgb(65, 126, 138);
+  background: rgb(25, 29, 117);
   color: #ffffff;
   border-radius: 16px;
   padding: 14px 16px;
@@ -156,8 +156,8 @@ body {
 }
 
 .preview-toggle input:checked + .preview-switch {
-  background: rgb(25, 29, 117);
-  border-color: rgb(25, 29, 117);
+  background: rgb(39, 37, 31);
+  border-color: rgb(39, 37, 31);
 }
 
 .preview-toggle input:checked + .preview-switch .preview-knob {
@@ -244,7 +244,7 @@ body {
 }
 
 .btn-viewer {
-  border-color: rgb(25, 29, 117);
+  border-color: rgb(39, 37, 31);
   background: var(--viewer-soft);
   color: var(--viewer);
 }
@@ -268,7 +268,7 @@ body {
 }
 
 .blank-controls {
-  background: #fbfcfe;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px;
@@ -276,7 +276,7 @@ body {
 }
 
 .range-split-controls {
-  background: #eef1fb;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px;
