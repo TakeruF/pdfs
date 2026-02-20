@@ -63,12 +63,26 @@ body {
   font-size: 0.86rem;
 }
 
-.lang-bar select {
+.lang-pill {
+  display: inline-flex;
   border: 1px solid #bfc4d8;
-  border-radius: 10px;
+  border-radius: 999px;
+  overflow: hidden;
   background: #fff;
-  padding: 6px 8px;
-  font-size: 0.84rem;
+}
+
+.lang-pill-btn {
+  border: 0;
+  background: transparent;
+  color: rgb(39, 37, 31);
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.lang-pill-btn.is-active {
+  background: rgb(39, 37, 31);
+  color: #ffffff;
 }
 
 .topbar {

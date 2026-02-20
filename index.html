@@ -10,11 +10,11 @@
     <main class="app">
       <header class="topbar">
         <div class="lang-bar">
-          <label for="language-select" data-i18n="label.language">言語</label>
-          <select id="language-select" aria-label="language">
-            <option value="ja">日本語</option>
-            <option value="zh">中文</option>
-          </select>
+          <span data-i18n="label.language">言語</span>
+          <div class="lang-pill" role="group" aria-label="language">
+            <button id="lang-zh-btn" class="lang-pill-btn" type="button">中文</button>
+            <button id="lang-ja-btn" class="lang-pill-btn is-active" type="button">日本語</button>
+          </div>
         </div>
         <h1 data-i18n="title.app">pdf organizer</h1>
         <p data-i18n="desc.app">ブラウザ内だけで PDF を編集します。ファイルはサーバーへ送信しません。</p>

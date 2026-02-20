@@ -27,7 +27,8 @@ const elements = {
   startScreen: document.querySelector("#start-screen"),
   workspace: document.querySelector("#workspace"),
   fileInput: document.querySelector("#file-input"),
-  languageSelect: document.querySelector("#language-select"),
+  langZhBtn: document.querySelector("#lang-zh-btn"),
+  langJaBtn: document.querySelector("#lang-ja-btn"),
   inSitePreviewToggle: document.querySelector("#in-site-preview-toggle"),
   status: document.querySelector("#status"),
   workspaceStatus: document.querySelector("#workspace-status"),
@@ -807,15 +808,15 @@ function initLanguage() {
   const saved = localStorage.getItem("pdf-organizer-lang");
   const defaultLang = saved || detectLanguageFromBrowser();
   setLanguage(defaultLang, false);
-  elements.languageSelect.addEventListener("change", () => {
-    setLanguage(elements.languageSelect.value, true);
-  });
+  elements.langZhBtn.addEventListener("click", () => setLanguage("zh", true));
+  elements.langJaBtn.addEventListener("click", () => setLanguage("ja", true));
 }
 
 function setLanguage(lang, save = true) {
   state.language = lang === "zh" ? "zh" : "ja";
   document.documentElement.lang = state.language === "zh" ? "zh" : "ja";
-  elements.languageSelect.value = state.language;
+  elements.langJaBtn.classList.toggle("is-active", state.language === "ja");
+  elements.langZhBtn.classList.toggle("is-active", state.language === "zh");
   applyStaticTexts();
   if (!state.previewSupported) {
     elements.openSourceViewerBtn.textContent = t("status.previewUnsupportedShort");
