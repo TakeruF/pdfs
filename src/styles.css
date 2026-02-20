@@ -45,12 +45,12 @@ body {
 
 .topbar h1 {
   margin: 0;
-  font-size: 3rem;
+  font-size: 2.5rem;
   letter-spacing: 0.01em;
   text-align: center;
   color: rgb(39, 37, 31);
-  font-family: "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
-  font-weight: 700;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-weight: 600;
 }
 
 .topbar {
@@ -143,8 +143,8 @@ body {
   width: 56px;
   height: 32px;
   border-radius: 999px;
-  background: #cdd3ee;
-  border: 1px solid #b9c0e3;
+  background: #FAF8F5;
+  border: 1px solid #ECE6DE;
   padding: 2px;
   display: inline-flex;
   align-items: center;
