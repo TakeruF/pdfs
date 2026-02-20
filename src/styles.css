@@ -1,22 +1,22 @@
 :root {
   color-scheme: light;
   --bg: rgb(250, 248, 245);
-  --panel: #f3f2fa;
+  --panel: rgb(243, 240, 237);
   --line: #c9cee2;
   --text: #000000;
   --muted: #586780;
-  --primary: #181d7a;
+  --primary: rgb(25, 29, 117);
   --primary-soft: #e8ebfa;
   --danger: #b3261e;
   --danger-soft: #fde8e7;
   --selected: #eaf4ff;
-  --select: #181d7a;
+  --select: rgb(25, 29, 117);
   --select-soft: #eaedfb;
-  --export: #181d7a;
+  --export: rgb(25, 29, 117);
   --export-soft: #eaedfb;
   --viewer: #ffffff;
-  --viewer-soft: #181d7a;
-  --spread: #181d7a;
+  --viewer-soft: rgb(25, 29, 117);
+  --spread: rgb(25, 29, 117);
   --spread-soft: #eaedfb;
   --blank: #1f266c;
   --blank-soft: #eceffd;
@@ -101,7 +101,16 @@ body {
   padding: 28px;
 }
 
-.start-screen .file-picker {
+.start-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.start-controls .file-picker {
   font-size: 1.05rem;
   padding: 12px 18px;
 }
@@ -110,7 +119,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 12px;
+  margin-top: 0;
   font-size: 0.96rem;
   color: #000;
   user-select: none;
@@ -147,8 +156,8 @@ body {
 }
 
 .preview-toggle input:checked + .preview-switch {
-  background: #181d7a;
-  border-color: #181d7a;
+  background: rgb(25, 29, 117);
+  border-color: rgb(25, 29, 117);
 }
 
 .preview-toggle input:checked + .preview-switch .preview-knob {
@@ -160,7 +169,7 @@ body {
 }
 
 .preview-note {
-  margin-top: 8px;
+  margin-top: 0;
   font-size: 0.84rem;
   color: var(--muted);
 }
@@ -235,7 +244,7 @@ body {
 }
 
 .btn-viewer {
-  border-color: #181d7a;
+  border-color: rgb(25, 29, 117);
   background: var(--viewer-soft);
   color: var(--viewer);
 }

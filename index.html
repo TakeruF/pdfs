@@ -14,17 +14,19 @@
       </header>
 
       <section id="start-screen" class="panel start-screen">
-        <label class="file-picker">
-          <input id="file-input" type="file" accept="application/pdf" />
-          PDFを選択
-        </label>
-        <label class="preview-toggle" for="in-site-preview-toggle">
-          <input id="in-site-preview-toggle" type="checkbox" checked />
-          <span class="preview-switch" aria-hidden="true">
-            <span class="preview-knob"></span>
-          </span>
-          <span class="preview-toggle-text">サイト内でPDFプレビューする</span>
-        </label>
+        <div class="start-controls">
+          <label class="file-picker">
+            <input id="file-input" type="file" accept="application/pdf" />
+            PDFを選択
+          </label>
+          <label class="preview-toggle" for="in-site-preview-toggle">
+            <input id="in-site-preview-toggle" type="checkbox" checked />
+            <span class="preview-switch" aria-hidden="true">
+              <span class="preview-knob"></span>
+            </span>
+            <span class="preview-toggle-text">サイト内でPDFプレビューする</span>
+          </label>
+        </div>
         <div class="preview-note">
           100ページ以上のPDFで動作が不安定な場合は、この設定をオフにすることを推奨します。
         </div>
