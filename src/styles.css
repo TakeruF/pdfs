@@ -55,7 +55,9 @@ body {
   border-radius: 0;
   padding: 14px 16px 10px;
   margin-bottom: 14px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+  border: 0;
+  border-bottom: 2px solid rgb(39, 37, 31);
+  box-shadow: none;
 }
 
 .topbar p {
