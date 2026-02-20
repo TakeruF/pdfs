@@ -1,25 +1,25 @@
 :root {
   color-scheme: light;
   --bg: rgb(250, 248, 245);
-  --panel: #ffffff;
-  --line: #d0d7e2;
+  --panel: #f3f2fa;
+  --line: #c9cee2;
   --text: #000000;
   --muted: #586780;
-  --primary: #0f4c81;
-  --primary-soft: #e4eef8;
+  --primary: #181d7a;
+  --primary-soft: #e8ebfa;
   --danger: #b3261e;
   --danger-soft: #fde8e7;
   --selected: #eaf4ff;
-  --select: #2b5e34;
-  --select-soft: #e9f7eb;
-  --export: #0f4c81;
-  --export-soft: #e7f1fb;
-  --viewer: #5a3e8a;
-  --viewer-soft: #efe8fb;
-  --spread: #8a5b11;
-  --spread-soft: #faefde;
-  --blank: #5e6570;
-  --blank-soft: #eef1f5;
+  --select: #181d7a;
+  --select-soft: #eaedfb;
+  --export: #181d7a;
+  --export-soft: #eaedfb;
+  --viewer: #ffffff;
+  --viewer-soft: #181d7a;
+  --spread: #181d7a;
+  --spread-soft: #eaedfb;
+  --blank: #1f266c;
+  --blank-soft: #eceffd;
 }
 
 * {
@@ -72,7 +72,7 @@ body {
   border-radius: 16px;
   padding: 14px;
   margin-bottom: 12px;
-  box-shadow: 0 6px 16px rgba(20, 30, 50, 0.05);
+  box-shadow: 0 4px 12px rgba(20, 30, 50, 0.04);
 }
 
 .file-picker {
@@ -81,7 +81,7 @@ body {
   gap: 10px;
   padding: 8px 12px;
   background: var(--primary-soft);
-  border: 1px solid #bfd4ec;
+  border: 1px solid #b9c2ea;
   border-radius: 10px;
   color: var(--primary);
   font-weight: 700;
@@ -109,10 +109,54 @@ body {
 .preview-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-top: 12px;
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   color: #000;
+  user-select: none;
+  cursor: pointer;
+}
+
+.preview-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.preview-switch {
+  width: 56px;
+  height: 32px;
+  border-radius: 999px;
+  background: #cdd3ee;
+  border: 1px solid #b9c0e3;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 120ms ease;
+}
+
+.preview-knob {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transform: translateX(0);
+  transition: transform 120ms ease;
+}
+
+.preview-toggle input:checked + .preview-switch {
+  background: #181d7a;
+  border-color: #181d7a;
+}
+
+.preview-toggle input:checked + .preview-switch .preview-knob {
+  transform: translateX(24px);
+}
+
+.preview-toggle-text {
+  font-weight: 600;
 }
 
 .preview-note {
@@ -152,7 +196,7 @@ body {
 .spread-controls button,
 .blank-controls button {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 999px;
   padding: 12px 14px;
   min-height: 48px;
   background: #fff;
@@ -191,7 +235,7 @@ body {
 }
 
 .btn-viewer {
-  border-color: #d1c2ef;
+  border-color: #181d7a;
   background: var(--viewer-soft);
   color: var(--viewer);
 }
@@ -203,9 +247,9 @@ body {
 }
 
 .btn-danger {
-  border-color: #efb3b0;
-  background: var(--danger-soft);
-  color: var(--danger);
+  border-color: #d88a86;
+  background: #f9dfdd;
+  color: #8d1410;
 }
 
 .btn-blank {
@@ -223,7 +267,7 @@ body {
 }
 
 .range-split-controls {
-  background: #f8fbff;
+  background: #eef1fb;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px;
@@ -305,7 +349,7 @@ body {
 .page-card {
   border: 2px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: #ffffff;
   padding: 8px;
   cursor: grab;
   transition: transform 120ms ease, border-color 120ms ease;

@@ -18,9 +18,12 @@
           <input id="file-input" type="file" accept="application/pdf" />
           PDFを選択
         </label>
-        <label class="preview-toggle">
+        <label class="preview-toggle" for="in-site-preview-toggle">
           <input id="in-site-preview-toggle" type="checkbox" checked />
-          サイト内でPDFプレビューする
+          <span class="preview-switch" aria-hidden="true">
+            <span class="preview-knob"></span>
+          </span>
+          <span class="preview-toggle-text">サイト内でPDFプレビューする</span>
         </label>
         <div class="preview-note">
           100ページ以上のPDFで動作が不安定な場合は、この設定をオフにすることを推奨します。
