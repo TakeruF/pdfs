@@ -44,25 +44,28 @@ body {
 }
 
 .topbar h1 {
-  margin: 0 0 4px;
-  font-size: 2rem;
-  letter-spacing: 0.02em;
+  margin: 0;
+  font-size: 3rem;
+  letter-spacing: 0.01em;
+  text-align: center;
+  color: rgb(39, 37, 31);
+  font-family: "Segoe Print", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, cursive;
+  font-weight: 700;
 }
 
 .topbar {
-  background: rgb(25, 29, 117);
-  color: #ffffff;
+  background: transparent;
+  color: rgb(39, 37, 31);
   border-radius: 0;
-  padding: 14px 16px 10px;
-  margin-bottom: 14px;
+  padding: 8px 0 12px;
+  margin-bottom: 18px;
   border: 0;
   border-bottom: 2px solid rgb(39, 37, 31);
   box-shadow: none;
 }
 
 .topbar p {
-  margin: 0 0 16px;
-  color: #ffffff;
+  display: none;
 }
 
 .top-open-btn {
@@ -420,7 +423,7 @@ body {
   }
 
   .topbar h1 {
-    font-size: 1.6rem;
+    font-size: 2.2rem;
   }
 
   .spread-controls {
