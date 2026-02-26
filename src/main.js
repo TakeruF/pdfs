@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { PDFDocument } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import { flattenAndUnlockPdf, PasswordRequiredError, PdfProcessingError } from "./flattenAndUnlockPdf";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -124,6 +125,12 @@ const translations = {
     "status.selectForSpread": "見開き変換するページを選択してください。",
     "status.exportedSpreadSelected": "選択ページの見開きPDFを書き出しました。",
     "status.loadingPdf": "PDFを読み込んでいます...",
+    "status.unlockingPdf": "保護されたPDFを変換しています...",
+    "status.passwordPrompt": "PDFのパスワードを入力してください。",
+    "status.passwordPromptRetry": "パスワードが違います。もう一度入力してください。",
+    "status.passwordCancelled": "パスワード入力がキャンセルされました。",
+    "status.passwordRequired": "このPDFはパスワードが必要です。",
+    "status.unlockFailed": "保護PDFの変換に失敗しました。{detail}",
     "status.fileSummary": "{name} ({pages}ページ)",
     "status.loadDoneNotEditable": "読み込み完了（編集不可）: {detail}",
     "status.loadDoneHeavyAdvice": "読み込み完了: {name}。100ページ以上のため、不安定な場合は「サイト内でPDFプレビューする」をオフ推奨。",
@@ -205,6 +212,12 @@ const translations = {
     "status.selectForSpread": "请选择要跨页转换的页面。",
     "status.exportedSpreadSelected": "已导出已选页面的跨页PDF。",
     "status.loadingPdf": "正在加载PDF...",
+    "status.unlockingPdf": "正在转换受保护的PDF...",
+    "status.passwordPrompt": "请输入PDF密码。",
+    "status.passwordPromptRetry": "密码不正确，请重试。",
+    "status.passwordCancelled": "已取消输入密码。",
+    "status.passwordRequired": "此PDF需要密码。",
+    "status.unlockFailed": "受保护PDF转换失败。{detail}",
     "status.fileSummary": "{name}（{pages}页）",
     "status.loadDoneNotEditable": "加载完成（不可编辑）: {detail}",
     "status.loadDoneHeavyAdvice": "加载完成: {name}。页数超过100时若不稳定，建议关闭“站内预览PDF”。",
@@ -406,11 +419,27 @@ async function onFileSelected(event) {
     const raw = await file.arrayBuffer();
     const normalized = normalizePdfBytes(new Uint8Array(raw));
 
-    const pdfjsBytes = new Uint8Array(normalized);
-    const appBytes = new Uint8Array(normalized);
+    let appBytes = new Uint8Array(normalized);
+    let { doc: pdfjsDoc, usedPassword } = await loadPdfWithPasswordPrompt(normalized);
 
-    const loadingTask = pdfjsLib.getDocument({ data: pdfjsBytes });
-    const pdfjsDoc = await loadingTask.promise;
+    if (usedPassword) {
+      setStatus(t("status.unlockingPdf"), !elements.workspace.classList.contains("hidden"));
+      try {
+        appBytes = await flattenAndUnlockPdf(new Uint8Array(normalized), { password: usedPassword });
+        await pdfjsDoc.destroy();
+        const unlockedTask = pdfjsLib.getDocument({ data: new Uint8Array(appBytes) });
+        pdfjsDoc = await unlockedTask.promise;
+      } catch (error) {
+        if (error instanceof PasswordRequiredError) {
+          throw new Error(t("status.passwordRequired"));
+        }
+        if (error instanceof PdfProcessingError) {
+          throw new Error(t("status.unlockFailed", { detail: error.message }));
+        }
+        throw new Error(t("status.unlockFailed", { detail: formatError(error) }));
+      }
+    }
+
     const firstPage = await pdfjsDoc.getPage(1);
     const firstViewport = firstPage.getViewport({ scale: 1 });
     const streamProbe = await probePdfJsStream(firstPage);
@@ -959,4 +988,29 @@ function isSafariBrowser() {
   const ua = navigator.userAgent;
   const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|Chromium|Edg|OPR|FxiOS|Android/i.test(ua);
   return isSafari;
+}
+
+async function loadPdfWithPasswordPrompt(pdfBytes) {
+  let password;
+  let retry = false;
+
+  for (;;) {
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(pdfBytes),
+      password
+    });
+
+    try {
+      const doc = await loadingTask.promise;
+      return { doc, usedPassword: password || "" };
+    } catch (error) {
+      if (!isPasswordError(error)) throw error;
+      const input = window.prompt(retry ? t("status.passwordPromptRetry") : t("status.passwordPrompt"), "");
+      if (input === null) {
+        throw new Error(t("status.passwordCancelled"));
+      }
+      password = input;
+      retry = true;
+    }
+  }
 }
