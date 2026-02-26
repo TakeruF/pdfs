@@ -19,6 +19,7 @@ const state = {
   editable: true,
   useIgnoreEncryption: false,
   editErrorDetail: "",
+  editWarningCode: "",
   previewSupported: true,
   inSitePreviewEnabled: true
 };
@@ -128,6 +129,7 @@ const translations = {
     "status.loadDoneHeavyAdvice": "読み込み完了: {name}。100ページ以上のため、不安定な場合は「サイト内でPDFプレビューする」をオフ推奨。",
     "status.loadDoneCompat": "読み込み完了（互換モード）: 暗号化PDFのため ignoreEncryption を使用します。",
     "status.loadDone": "読み込み完了: {name}",
+    "status.encryptedPreviewOnly": "暗号化PDFは互換モードで読み込みました。白紙出力を防ぐため、編集/書き出しは無効です（プレビューのみ）。",
     "card.order": "並び順: {num}",
     "card.blank": "空白ページ",
     "card.original": "元ページ: {num}",
@@ -208,6 +210,7 @@ const translations = {
     "status.loadDoneHeavyAdvice": "加载完成: {name}。页数超过100时若不稳定，建议关闭“站内预览PDF”。",
     "status.loadDoneCompat": "加载完成（兼容模式）: 因PDF加密，已使用 ignoreEncryption。",
     "status.loadDone": "加载完成: {name}",
+    "status.encryptedPreviewOnly": "已用兼容模式读取加密PDF。为避免导出空白，已禁用编辑/导出（仅可预览）。",
     "card.order": "顺序: {num}",
     "card.blank": "空白页",
     "card.original": "原始页: {num}",
@@ -410,6 +413,7 @@ async function onFileSelected(event) {
     const pdfjsDoc = await loadingTask.promise;
     const firstPage = await pdfjsDoc.getPage(1);
     const firstViewport = firstPage.getViewport({ scale: 1 });
+    const streamProbe = await probePdfJsStream(firstPage);
 
     state.fileName = file.name;
     state.fileBytes = appBytes;
@@ -423,6 +427,14 @@ async function onFileSelected(event) {
     state.editable = editCheck.editable;
     state.useIgnoreEncryption = editCheck.useIgnoreEncryption;
     state.editErrorDetail = editCheck.detail;
+    state.editWarningCode = editCheck.code || "";
+
+    if (!streamProbe.ok) {
+      state.editable = false;
+      state.useIgnoreEncryption = false;
+      state.editWarningCode = "stream";
+      state.editErrorDetail = streamProbe.detail;
+    }
 
     state.pages = Array.from({ length: pdfjsDoc.numPages }, (_, i) => createSourcePageEntry(i));
 
@@ -588,6 +600,9 @@ async function exportPdf(pageEntries, fileName) {
 
 async function createPdfFromEntries(pageEntries) {
   if (!state.fileBytes) throw new Error(t("error.notLoaded"));
+  if (!state.editable) {
+    throw new Error(t("status.editNotAllowed", { detail: state.editErrorDetail }));
+  }
   const src = await PDFDocument.load(state.fileBytes, pdfLoadOptions());
   const out = await PDFDocument.create();
 
@@ -605,6 +620,9 @@ async function createPdfFromEntries(pageEntries) {
 
 async function createSpreadPdf(pageEntries, binding = "left") {
   if (!state.fileBytes) throw new Error(t("error.notLoaded"));
+  if (!state.editable) {
+    throw new Error(t("status.editNotAllowed", { detail: state.editErrorDetail }));
+  }
   const src = await PDFDocument.load(state.fileBytes, pdfLoadOptions());
   const out = await PDFDocument.create();
   const isRightBinding = binding === "right";
@@ -886,14 +904,16 @@ async function assessEditability(bytes) {
   try {
     await PDFDocument.load(new Uint8Array(bytes), { ignoreEncryption: true });
     return {
-      editable: true,
+      editable: false,
       useIgnoreEncryption: true,
-      detail: ""
+      code: "encrypted-bypass",
+      detail: t("status.encryptedPreviewOnly")
     };
   } catch (error) {
     return {
       editable: false,
       useIgnoreEncryption: false,
+      code: isCompressionError(error) ? "stream" : "generic",
       detail: formatError(error)
     };
   }
@@ -909,6 +929,30 @@ function formatError(error) {
     return `[${error.name}] ${error.message}`;
   }
   return String(error);
+}
+
+async function probePdfJsStream(page) {
+  try {
+    const viewport = page.getViewport({ scale: 0.2 });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.ceil(viewport.width));
+    canvas.height = Math.max(1, Math.ceil(viewport.height));
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return { ok: true, detail: "" };
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return { ok: true, detail: "" };
+  } catch (error) {
+    const detail = formatError(error);
+    if (isCompressionError(error)) {
+      return { ok: false, detail };
+    }
+    return { ok: true, detail: "" };
+  }
+}
+
+function isCompressionError(error) {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return message.includes("unknown compression method in flate stream") || message.includes("flate stream");
 }
 
 function isSafariBrowser() {
