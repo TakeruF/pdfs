@@ -991,26 +991,35 @@ function isSafariBrowser() {
 }
 
 async function loadPdfWithPasswordPrompt(pdfBytes) {
-  let password;
-  let retry = false;
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(pdfBytes)
+  });
 
-  for (;;) {
-    const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(pdfBytes),
-      password
-    });
+  let usedPassword = "";
+  let cancelled = false;
 
-    try {
-      const doc = await loadingTask.promise;
-      return { doc, usedPassword: password || "" };
-    } catch (error) {
-      if (!isPasswordError(error)) throw error;
-      const input = window.prompt(retry ? t("status.passwordPromptRetry") : t("status.passwordPrompt"), "");
-      if (input === null) {
-        throw new Error(t("status.passwordCancelled"));
-      }
-      password = input;
-      retry = true;
+  loadingTask.onPassword = (updatePassword, reason) => {
+    const retry = Number(reason) === 2;
+    const input = window.prompt(retry ? t("status.passwordPromptRetry") : t("status.passwordPrompt"), "");
+    if (input === null) {
+      cancelled = true;
+      void loadingTask.destroy();
+      return;
     }
+    usedPassword = input;
+    updatePassword(input);
+  };
+
+  try {
+    const doc = await loadingTask.promise;
+    return { doc, usedPassword };
+  } catch (error) {
+    if (cancelled) {
+      throw new Error(t("status.passwordCancelled"));
+    }
+    if (isPasswordError(error)) {
+      throw new Error(t("status.passwordRequired"));
+    }
+    throw error;
   }
 }
