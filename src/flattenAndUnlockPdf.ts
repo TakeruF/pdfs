@@ -21,6 +21,8 @@ export class PdfProcessingError extends Error {
 type FlattenOptions = {
   password?: string;
   scale?: number;
+  cMapUrl?: string;
+  standardFontDataUrl?: string;
 };
 
 /**
@@ -32,9 +34,14 @@ export async function flattenAndUnlockPdf(
   options: FlattenOptions = {}
 ): Promise<Uint8Array> {
   const scale = Math.max(2.0, options.scale ?? 2.5);
+  const cMapUrl = ensureTrailingSlash(options.cMapUrl ?? "/cmaps/");
+  const standardFontDataUrl = ensureTrailingSlash(options.standardFontDataUrl ?? "/standard_fonts/");
   const loadingTask = pdfjsLib.getDocument({
     data: pdfBytes,
     password: options.password,
+    cMapUrl,
+    cMapPacked: true,
+    standardFontDataUrl,
     useSystemFonts: true,
     disableFontFace: false
   });
@@ -63,13 +70,23 @@ export async function flattenAndUnlockPdf(
       const ctx = canvas.getContext("2d", { alpha: false });
       if (!ctx) throw new PdfProcessingError("このPDFは処理できません。");
 
+      // TextLayer相当の前処理としてテキスト抽出を先に実行し、フォント解決を促進
+      // （環境によっては文字欠落の抑制に寄与）
+      try {
+        await srcPage.getTextContent();
+      } catch {
+        // テキスト抽出に失敗しても、画像化レンダリングは継続する
+      }
+
       // 背景を白で固定してからprint意図で描画（文字欠落を低減）
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      await srcPage.render({ canvasContext: ctx, viewport, intent: "print" }).promise;
+      const renderTask = srcPage.render({ canvasContext: ctx, viewport, intent: "print" });
+      await renderTask.promise;
 
-      const pngBytes = await canvasToPngBytes(canvas);
-      const pngImage = await outDoc.embedPng(pngBytes);
+      const pngDataUrl = canvas.toDataURL("image/png");
+      const pngImage = await outDoc.embedPng(pngDataUrl);
 
       // 出力ページは元ページサイズ（scale:1）に揃える
       const pageWidth = baseViewport.width;
@@ -99,29 +116,6 @@ export async function flattenAndUnlockPdf(
   return outDoc.save();
 }
 
-async function canvasToPngBytes(canvas: HTMLCanvasElement): Promise<Uint8Array> {
-  const blob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob((b) => resolve(b), "image/png");
-  });
-  if (blob) {
-    return new Uint8Array(await blob.arrayBuffer());
-  }
-  const fallbackDataUrl = canvas.toDataURL("image/png");
-  return dataUrlToBytes(fallbackDataUrl);
-}
-
-function dataUrlToBytes(dataUrl: string): Uint8Array {
-  const commaIndex = dataUrl.indexOf(",");
-  if (commaIndex < 0) return new Uint8Array();
-  const base64 = dataUrl.slice(commaIndex + 1);
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
 function isPasswordError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const maybe = error as { name?: string; code?: number };
@@ -136,4 +130,8 @@ async function yieldToMainThread(): Promise<void> {
     }
     setTimeout(() => resolve(), 0);
   });
+}
+
+function ensureTrailingSlash(input: string): string {
+  return input.endsWith("/") ? input : `${input}/`;
 }
