@@ -11,9 +11,9 @@
   "dependencies": {
     "jszip": "^3.10.1",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.10.38"
+    "pdfjs-dist": "^6.1.200"
   },
   "devDependencies": {
-    "vite": "^5.4.14"
+    "vite": "^8.1.5"
   }
 }
