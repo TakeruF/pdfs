@@ -59,3 +59,5 @@ npm run build
 ## ライセンス
 
 [MIT License](LICENSE)
+
+<!-- auto-merge precondition check -->
