@@ -1,0 +1,36 @@
+name: Dependabot auto-merge
+
+# Queues GitHub's auto-merge on non-major Dependabot PRs, so they land as soon
+# as the CI build is green instead of waiting for a manual review. Branch
+# protection on main requires that check, so a red PR is never merged.
+
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Major bumps stay manual: a passing build does not rule out a breaking
+      # API change. Security fixes are not filtered for separately -- they
+      # usually arrive inside an ordinary version-update PR, so narrowing this
+      # to Dependabot's security updates would miss most of them.
+      - name: Enable auto-merge for patch and minor updates
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
